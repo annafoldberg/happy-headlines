@@ -1,0 +1,82 @@
+x-article-database: &article-database
+  image: postgres:17-alpine
+  environment:
+    POSTGRES_DB: articles
+    POSTGRES_USER: happy-headlines
+    POSTGRES_PASSWORD: happy-headlines
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U happy-headlines -d articles"]
+    interval: 2s
+    timeout: 3s
+    retries: 15
+
+services:
+  article-service:
+    image: article-service:latest
+    ports:
+      - "8080:8080"
+    environment:
+      ArticleDatabase__Africa__Host: article-database-africa
+      ArticleDatabase__Antarctica__Host: article-database-antarctica
+      ArticleDatabase__Asia__Host: article-database-asia
+      ArticleDatabase__Europe__Host: article-database-europe
+      ArticleDatabase__NorthAmerica__Host: article-database-north-america
+      ArticleDatabase__Oceania__Host: article-database-oceania
+      ArticleDatabase__SouthAmerica__Host: article-database-south-america
+      ArticleDatabase__Global__Host: article-database-global
+      ArticleDatabase__Name: articles
+      ArticleDatabase__User: happy-headlines
+      ArticleDatabase__Password: happy-headlines
+    deploy:
+      replicas: 3
+        
+  article-database-africa:
+    <<: *article-database
+    volumes:
+      - article-database-africa-data:/var/lib/postgresql/data
+      - ./ArticleDatabase/init:/docker-entrypoint-initdb.d:ro
+  article-database-antarctica:
+    <<: *article-database
+    volumes:
+      - article-database-antarctica-data:/var/lib/postgresql/data
+      - ./ArticleDatabase/init:/docker-entrypoint-initdb.d:ro
+  article-database-asia:
+    <<: *article-database
+    volumes:
+      - article-database-asia-data:/var/lib/postgresql/data
+      - ./ArticleDatabase/init:/docker-entrypoint-initdb.d:ro
+  article-database-europe:
+    <<: *article-database
+    volumes:
+      - article-database-europe-data:/var/lib/postgresql/data
+      - ./ArticleDatabase/init:/docker-entrypoint-initdb.d:ro
+  article-database-north-america:
+    <<: *article-database
+    volumes:
+      - article-database-north-america-data:/var/lib/postgresql/data
+      - ./ArticleDatabase/init:/docker-entrypoint-initdb.d:ro
+  article-database-oceania:
+    <<: *article-database
+    volumes:
+      - article-database-oceania-data:/var/lib/postgresql/data
+      - ./ArticleDatabase/init:/docker-entrypoint-initdb.d:ro
+  article-database-south-america:
+    <<: *article-database
+    volumes:
+      - article-database-south-america-data:/var/lib/postgresql/data
+      - ./ArticleDatabase/init:/docker-entrypoint-initdb.d:ro
+  article-database-global:
+    <<: *article-database
+    volumes:
+      - article-database-global-data:/var/lib/postgresql/data
+      - ./ArticleDatabase/init:/docker-entrypoint-initdb.d:ro
+
+volumes:
+  article-database-africa-data:
+  article-database-antarctica-data:
+  article-database-asia-data:
+  article-database-europe-data:
+  article-database-north-america-data:
+  article-database-oceania-data:
+  article-database-south-america-data:
+  article-database-global-data:
