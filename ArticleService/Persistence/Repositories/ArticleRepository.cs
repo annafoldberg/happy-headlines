@@ -1,5 +1,5 @@
 using ArticleService.Entities;
-using ArticleService.Persistence.Context;
+using ArticleService.Persistence.Contexts;
 using ArticleService.Routing;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,12 +25,11 @@ public class ArticleRepository : IArticleRepository
         await context.SaveChangesAsync(ct);
     }
 
-    public async Task<Article?> GetByIdAsync(Continent continent, Guid id, CancellationToken ct)
+    public async Task<Article?> GetByPublicIdAsync(Continent continent, Guid id, CancellationToken ct)
     {
         await using var context = _contextFactory.Create(continent);
 
-        return await context.Articles
-            .FirstOrDefaultAsync(a => a.PublicId == id, ct);
+        return await context.Articles.FirstOrDefaultAsync(a => a.PublicId == id, ct);
     }
 
     public async Task UpdateAsync(Continent continent, Article article, CancellationToken ct)

@@ -1,6 +1,6 @@
 using ArticleService.Routing;
 
-namespace ArticleService.Persistence.Context;
+namespace ArticleService.Persistence.Contexts;
 
 /// <summary>
 /// Defines a factory for creating article database contexts.

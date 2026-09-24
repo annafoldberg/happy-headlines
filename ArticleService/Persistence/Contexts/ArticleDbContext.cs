@@ -1,10 +1,10 @@
 using ArticleService.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace ArticleService.Persistence.Context;
+namespace ArticleService.Persistence.Contexts;
 
 /// <summary>
-/// Entity Framework Core database context for the article database.
+/// Entity Framework Core database context for the Article Service.
 /// </summary>
 public sealed class ArticleDbContext : DbContext, IArticleDbContext
 {

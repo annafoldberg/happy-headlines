@@ -1,4 +1,4 @@
-namespace ArticleService.Persistence.Configuration;
+namespace ArticleService.Persistence;
 
 /// <summary>
 /// Configuration options for database connection.

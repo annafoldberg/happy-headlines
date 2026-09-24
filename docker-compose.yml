@@ -1,16 +1,43 @@
-x-article-database: &article-database
+x-postgres-database: &postgres-database
   image: postgres:17-alpine
-  environment:
-    POSTGRES_DB: articles
+  environment: &postgres-environment
     POSTGRES_USER: happy-headlines
     POSTGRES_PASSWORD: happy-headlines
-  healthcheck:
-    test: ["CMD-SHELL", "pg_isready -U happy-headlines -d articles"]
+  healthcheck: &postgres-healthcheck
     interval: 2s
     timeout: 3s
     retries: 15
 
+x-article-database: &article-database
+  <<: *postgres-database
+  environment:
+    <<: *postgres-environment
+    POSTGRES_DB: articles
+  healthcheck:
+    <<: *postgres-healthcheck
+    test: ["CMD-SHELL", "pg_isready -U happy-headlines -d articles"]
+
 services:
+  profanity-service:
+    image: profanity-service:latest
+    ports:
+      - "8082:8080"
+    environment:
+      ProfanityDatabase__Host: profanity-database
+      ProfanityDatabase__Name: profanities
+      ProfanityDatabase__User: happy-headlines
+      ProfanityDatabase__Password: happy-headlines
+
+  comment-service:
+    image: comment-service:latest
+    ports:
+      - "8081:8080"
+    environment:
+      CommentDatabase__Host: comment-database
+      CommentDatabase__Name: comments
+      CommentDatabase__User: happy-headlines
+      CommentDatabase__Password: happy-headlines
+
   article-service:
     image: article-service:latest
     ports:
@@ -29,42 +56,73 @@ services:
       ArticleDatabase__Password: happy-headlines
     deploy:
       replicas: 3
+
+  profanity-database:
+    <<: *postgres-database
+    environment:
+      <<: *postgres-environment
+      POSTGRES_DB: profanities
+    healthcheck:
+      <<: *postgres-healthcheck
+      test: ["CMD-SHELL", "pg_isready -U happy-headlines -d profanities"]
+    volumes:
+      - profanity-database-data:/var/lib/postgresql/data
+      - ./ProfanityDatabase/init:/docker-entrypoint-initdb.d:ro
+
+  comment-database:
+    <<: *postgres-database
+    environment:
+      <<: *postgres-environment
+      POSTGRES_DB: comments
+    healthcheck:
+      <<: *postgres-healthcheck
+      test: ["CMD-SHELL", "pg_isready -U happy-headlines -d comments"]
+    volumes:
+      - comment-database-data:/var/lib/postgresql/data
+      - ./CommentDatabase/init:/docker-entrypoint-initdb.d:ro
         
   article-database-africa:
     <<: *article-database
     volumes:
       - article-database-africa-data:/var/lib/postgresql/data
       - ./ArticleDatabase/init:/docker-entrypoint-initdb.d:ro
+
   article-database-antarctica:
     <<: *article-database
     volumes:
       - article-database-antarctica-data:/var/lib/postgresql/data
       - ./ArticleDatabase/init:/docker-entrypoint-initdb.d:ro
+
   article-database-asia:
     <<: *article-database
     volumes:
       - article-database-asia-data:/var/lib/postgresql/data
       - ./ArticleDatabase/init:/docker-entrypoint-initdb.d:ro
+
   article-database-europe:
     <<: *article-database
     volumes:
       - article-database-europe-data:/var/lib/postgresql/data
       - ./ArticleDatabase/init:/docker-entrypoint-initdb.d:ro
+
   article-database-north-america:
     <<: *article-database
     volumes:
       - article-database-north-america-data:/var/lib/postgresql/data
       - ./ArticleDatabase/init:/docker-entrypoint-initdb.d:ro
+
   article-database-oceania:
     <<: *article-database
     volumes:
       - article-database-oceania-data:/var/lib/postgresql/data
       - ./ArticleDatabase/init:/docker-entrypoint-initdb.d:ro
+
   article-database-south-america:
     <<: *article-database
     volumes:
       - article-database-south-america-data:/var/lib/postgresql/data
       - ./ArticleDatabase/init:/docker-entrypoint-initdb.d:ro
+      
   article-database-global:
     <<: *article-database
     volumes:
@@ -72,6 +130,8 @@ services:
       - ./ArticleDatabase/init:/docker-entrypoint-initdb.d:ro
 
 volumes:
+  profanity-database-data:
+  comment-database-data:
   article-database-africa-data:
   article-database-antarctica-data:
   article-database-asia-data:

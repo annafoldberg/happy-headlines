@@ -1,9 +1,8 @@
-using ArticleService.Persistence.Configuration;
 using ArticleService.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-namespace ArticleService.Persistence.Context;
+namespace ArticleService.Persistence.Contexts;
 
 /// <summary>
 /// Creates a database context for the relevant continent database.

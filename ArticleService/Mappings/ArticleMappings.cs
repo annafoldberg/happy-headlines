@@ -1,33 +1,33 @@
-using ArticleService.Dtos;
+using ArticleService.Contracts;
 using ArticleService.Entities;
 
 namespace ArticleService.Mappings;
 
 /// <summary>
-/// Maps article DTOs and entities.
+/// Maps article contracts and entities.
 /// </summary>
 public static class ArticleMappings
 {
-    public static ArticleDto ToDto(this Article article)
+    public static ArticleResponse ToResponse(this Article article)
     {
-        return new ArticleDto
+        return new ArticleResponse
         {
             Id = article.PublicId,
-            PublicationTimestampUtc = article.PublicationTimestampUtc,
-            LastUpdatedTimestampUtc = article.LastUpdatedTimestampUtc,
             Author = article.Author,
             Title = article.Title,
-            Content = article.Content
+            Content = article.Content,
+            PublicationTimestampUtc = article.PublicationTimestampUtc,
+            LastUpdatedTimestampUtc = article.LastUpdatedTimestampUtc
         };
     }
 
-    public static Article ToEntity(this CreateArticleDto createArticleDto)
+    public static Article ToEntity(this CreateArticleRequest request)
     {
         return new Article
         {
-            Author = createArticleDto.Author,
-            Title = createArticleDto.Title,
-            Content = createArticleDto.Content
+            Author = request.Author,
+            Title = request.Title,
+            Content = request.Content
         };
     }
 }

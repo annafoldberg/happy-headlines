@@ -1,7 +1,7 @@
 using ArticleService.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace ArticleService.Persistence.Context;
+namespace ArticleService.Persistence.Contexts;
 
 /// <summary>
 /// Defines the article database context.

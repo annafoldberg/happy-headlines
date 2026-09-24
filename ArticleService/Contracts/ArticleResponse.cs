@@ -1,14 +1,14 @@
-namespace ArticleService.Dtos;
+namespace ArticleService.Contracts;
 
 /// <summary>
-/// Represents a published article DTO.
+/// Represents a published article response.
 /// </summary>
-public class ArticleDto
+public class ArticleResponse
 {
     public Guid Id { get; set; }
-    public DateTime PublicationTimestampUtc { get; set; }
-    public DateTime? LastUpdatedTimestampUtc { get; set; }
     public string Author { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
+    public DateTime PublicationTimestampUtc { get; set; }
+    public DateTime? LastUpdatedTimestampUtc { get; set; }
 }

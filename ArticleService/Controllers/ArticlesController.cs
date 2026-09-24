@@ -1,8 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using ArticleService.Persistence.Repositories;
-using ArticleService.Mappings;
-using ArticleService.Dtos;
+using ArticleService.Contracts;
 using ArticleService.Routing;
+using ArticleService.Services;
 
 namespace ArticleService.Controllers;
 
@@ -10,68 +9,53 @@ namespace ArticleService.Controllers;
 [Route("[controller]/{continent}")]
 public class ArticlesController : ControllerBase
 {
-    private readonly IArticleRepository _repository;
+    private readonly IArticleService _service;
 
-    public ArticlesController(IArticleRepository repository)
+    public ArticlesController(IArticleService service)
     {
-        _repository = repository;
+        _service = service;
     }
 
     [HttpPost]
-    public async Task<ActionResult> PostAsync([FromRoute] Continent continent,
-        [FromBody] CreateArticleDto createArticleDto, CancellationToken ct)
+    public async Task<IActionResult> CreateArticle([FromRoute] Continent continent,
+        [FromBody] CreateArticleRequest request, CancellationToken ct)
     {
-        var article = createArticleDto.ToEntity();
-        await _repository.AddAsync(continent, article, ct);
+        var article = await _service.CreateArticleAsync(continent, request, ct);
 
         return CreatedAtAction(
-            "GetById",
-            new { continent, id = article.PublicId },
-            article.ToDto());
+            nameof(GetArticle),
+            new { continent, id = article.Id },
+            article);
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<ArticleDto>> GetByIdAsync([FromRoute] Continent continent, [FromRoute] Guid id, CancellationToken ct)
+    public async Task<IActionResult> GetArticle([FromRoute] Continent continent, [FromRoute] Guid id, CancellationToken ct)
     {
-        var article = await _repository.GetByIdAsync(continent, id, ct);
+        var article = await _service.GetArticleAsync(continent, id, ct);
+
         if (article is null) return NotFound();
 
-        return Ok(article.ToDto());
+        return Ok(article);
     }
 
     [HttpPatch("{id}")]
-    public async Task<ActionResult> UpdateAsync([FromRoute] Continent continent,
-        [FromRoute] Guid id, [FromBody] UpdateArticleDto updateArticleDto, CancellationToken ct)
+    public async Task<IActionResult> UpdateArticle([FromRoute] Continent continent,
+        [FromRoute] Guid id, [FromBody] UpdateArticleRequest request, CancellationToken ct)
     {
-        var article = await _repository.GetByIdAsync(continent, id, ct);
-        if (article is null) return NotFound();
+        var result = await _service.UpdateArticleAsync(continent, id, request, ct);
 
-        var articleChanged =
-            (updateArticleDto.Author is not null && updateArticleDto.Author != article.Author) ||
-            (updateArticleDto.Title is not null && updateArticleDto.Title != article.Title) ||
-            (updateArticleDto.Content is not null && updateArticleDto.Content != article.Content);
-
-        if (articleChanged)
-        {
-            article.Author = updateArticleDto.Author ?? article.Author;
-            article.Title = updateArticleDto.Title ?? article.Title;
-            article.Content = updateArticleDto.Content ?? article.Content;
-            
-            article.LastUpdatedTimestampUtc = DateTime.UtcNow;
-            await _repository.UpdateAsync(continent, article, ct);
-        }
+        if (result == ArticleOperationResult.NotFound) return NotFound();
 
         return NoContent();
     }
 
     [HttpDelete("{id}")]
-    public async Task<ActionResult> DeleteAsync([FromRoute] Continent continent, [FromRoute] Guid id,
+    public async Task<IActionResult> DeleteArticle([FromRoute] Continent continent, [FromRoute] Guid id,
         CancellationToken ct)
     {
-        var article = await _repository.GetByIdAsync(continent, id, ct);
-        if (article is null) return NotFound();
-
-        await _repository.DeleteAsync(continent, article, ct);
+        var result = await _service.DeleteArticleAsync(continent, id, ct);
+        
+        if (result == ArticleOperationResult.NotFound) return NotFound();
 
         return NoContent();
     }
