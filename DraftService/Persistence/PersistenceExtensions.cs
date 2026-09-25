@@ -1,7 +1,7 @@
-using CommentService.Persistence.Contexts;
-using CommentService.Persistence.Repositories;
+using DraftService.Persistence.Contexts;
+using DraftService.Persistence.Repositories;
 
-namespace CommentService.Persistence;
+namespace DraftService.Persistence;
 
 public static class PersistenceExtensions
 {
@@ -18,8 +18,8 @@ public static class PersistenceExtensions
                 "Database configuration is incomplete.")
             .ValidateOnStart();
 
-        services.AddScoped<ICommentDbContext, CommentDbContext>();
-        services.AddScoped<ICommentRepository, CommentRepository>();
+        services.AddScoped<IDraftDbContext, DraftDbContext>();
+        services.AddScoped<IDraftRepository, DraftRepository>();
 
         return services;
     }

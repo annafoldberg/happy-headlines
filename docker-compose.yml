@@ -18,6 +18,15 @@ x-article-database: &article-database
     test: ["CMD-SHELL", "pg_isready -U happy-headlines -d articles"]
 
 services:
+  draft-service:
+    image: draft-service:latest
+    ports: "8083:8080"
+    environment:
+      DraftDatabase__Host: draft-database
+      DraftDatabase__Name: drafts
+      DraftDatabase__User: happy-headlines
+      DraftDatabase__Password: happy-headlines
+
   profanity-service:
     image: profanity-service:latest
     ports:
@@ -56,6 +65,18 @@ services:
       ArticleDatabase__Password: happy-headlines
     deploy:
       replicas: 3
+
+  draft-database:
+    <<: *postgres-database
+    environment:
+      <<: *postgres-environment
+      POSTGRES_DB: drafts
+    healthcheck:
+      <<: *postgres-healthcheck
+      test: ["CMD-SHELL", "pg_isready -U happy-headlines -d drafts"]
+    volumes:
+      - draft-database-data:/var/lib/postgresql/data
+      - ./DraftDatabase/init:/docker-entrypoint-initdb.d:ro
 
   profanity-database:
     <<: *postgres-database
@@ -122,7 +143,7 @@ services:
     volumes:
       - article-database-south-america-data:/var/lib/postgresql/data
       - ./ArticleDatabase/init:/docker-entrypoint-initdb.d:ro
-      
+
   article-database-global:
     <<: *article-database
     volumes:
@@ -130,6 +151,7 @@ services:
       - ./ArticleDatabase/init:/docker-entrypoint-initdb.d:ro
 
 volumes:
+  draft-database-data:
   profanity-database-data:
   comment-database-data:
   article-database-africa-data:

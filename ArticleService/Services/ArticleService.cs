@@ -36,8 +36,7 @@ public class ArticleService : IArticleService
     {
         var article = await _repository.GetByPublicIdAsync(continent, id, ct);
 
-        if (article is null)
-            return ArticleOperationResult.NotFound;
+        if (article is null) return ArticleOperationResult.NotFound;
 
         var changed = false;
 

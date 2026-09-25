@@ -1,9 +1,8 @@
 using CommentService.Entities;
 using CommentService.Persistence.Contexts;
-using CommentService.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 
-namespace CommentService.Repositories;
+namespace CommentService.Persistence.Repositories;
 
 public class CommentRepository : ICommentRepository
 {
