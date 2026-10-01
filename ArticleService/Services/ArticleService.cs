@@ -2,6 +2,7 @@ using ArticleService.Contracts;
 using ArticleService.Mappings;
 using ArticleService.Persistence.Repositories;
 using ArticleService.Routing;
+using ArticlePublished = Messaging.MessageContracts.ArticlePublished;
 
 namespace ArticleService.Services;
 
@@ -14,6 +15,14 @@ public class ArticleService : IArticleService
         _repository = repository;
     }
 
+    public async Task CreateFromPublishedArticleAsync(ArticlePublished articlePublished, CancellationToken ct)
+    {
+        var article = articlePublished.ToEntity();
+        var continent = articlePublished.Continent.ToArticleContinent();
+
+        await _repository.AddAsync(continent, article, ct);
+    }
+
     public async Task<ArticleResponse> CreateArticleAsync(Continent continent, CreateArticleRequest request, CancellationToken ct)
     {
         var article = request.ToEntity();
@@ -23,12 +32,23 @@ public class ArticleService : IArticleService
         return article.ToResponse();
     }
 
-    public async Task<ArticleResponse?> GetArticleAsync(Continent continent, Guid id, CancellationToken ct)
+    public async Task<ArticleResponse?> GetArticleByIdAsync(Continent continent, Guid id, CancellationToken ct)
     {
         var article = await _repository.GetByPublicIdAsync(continent, id, ct);
         
         if (article is null) return null;
         
+        return article.ToResponse();
+    }
+
+    public async Task<ArticleResponse?> GetArticleByDateAsync(Continent continent, DateOnly publicationDate, CancellationToken ct)
+    {
+        var articles = await _repository.GetByDateAsync(continent, publicationDate, ct);
+
+        if (articles.Count == 0) return null;
+
+        var article = articles[Random.Shared.Next(articles.Count)];
+
         return article.ToResponse();
     }
 

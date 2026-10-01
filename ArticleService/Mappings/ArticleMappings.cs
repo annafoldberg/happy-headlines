@@ -1,5 +1,9 @@
 using ArticleService.Contracts;
 using ArticleService.Entities;
+using Messaging.MessageContracts;
+using ArticleContinent = ArticleService.Routing.Continent;
+using MessagingContinent = Messaging.MessageContracts.Continent;
+
 
 namespace ArticleService.Mappings;
 
@@ -28,6 +32,34 @@ public static class ArticleMappings
             Author = request.Author,
             Title = request.Title,
             Content = request.Content
+        };
+    }
+
+    public static Article ToEntity(this ArticlePublished articlePublished)
+    {
+        return new Article
+        {
+            PublicId = articlePublished.ArticleId,
+            Author = articlePublished.Author,
+            Title = articlePublished.Title,
+            Content = articlePublished.Content,
+            PublicationTimestampUtc = articlePublished.PublicationTimestampUtc
+        };
+    }
+
+    public static ArticleContinent ToArticleContinent(this MessagingContinent continent)
+    {
+        return continent switch
+        {
+            MessagingContinent.Africa => ArticleContinent.Africa,
+            MessagingContinent.Antarctica => ArticleContinent.Antarctica,
+            MessagingContinent.Asia => ArticleContinent.Asia,
+            MessagingContinent.Europe => ArticleContinent.Europe,
+            MessagingContinent.NorthAmerica => ArticleContinent.NorthAmerica,
+            MessagingContinent.Oceania => ArticleContinent.Oceania,
+            MessagingContinent.SouthAmerica => ArticleContinent.SouthAmerica,
+            MessagingContinent.Global => ArticleContinent.Global,
+            _ => throw new ArgumentOutOfRangeException(nameof(continent), continent, "Unsupported continent.")
         };
     }
 }

@@ -1,15 +1,11 @@
-using System.Text.Json.Serialization;
-using ArticleService.Persistence;
-using ArticleService.Services;
-using ArticleService.Workers;
 using Messaging.RabbitMQ;
+using PublisherService.Services;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddPersistence(builder.Configuration);
-builder.Services.AddScoped<IArticleService, ArticleService.Services.ArticleService>();
-builder.Services.AddHostedService<ArticlePublishedWorker>();
-builder.Services.AddSingleton<IEventConsumer, RabbitMQConsumer>();
+builder.Services.AddScoped<IPublisherService, PublisherService.Services.PublisherService>();
+builder.Services.AddSingleton<IEventPublisher, RabbitMQPublisher>();
 
 builder.Services
     .AddControllers()

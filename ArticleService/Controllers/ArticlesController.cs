@@ -23,15 +23,28 @@ public class ArticlesController : ControllerBase
         var article = await _service.CreateArticleAsync(continent, request, ct);
 
         return CreatedAtAction(
-            nameof(GetArticle),
+            nameof(GetArticleById),
             new { continent, id = article.Id },
             article);
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetArticle([FromRoute] Continent continent, [FromRoute] Guid id, CancellationToken ct)
+    public async Task<IActionResult> GetArticleById([FromRoute] Continent continent, [FromRoute] Guid id, CancellationToken ct)
     {
-        var article = await _service.GetArticleAsync(continent, id, ct);
+        var article = await _service.GetArticleByIdAsync(continent, id, ct);
+
+        if (article is null) return NotFound();
+
+        return Ok(article);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetArticleByDate(
+        [FromRoute] Continent continent,
+        [FromQuery] DateOnly publicationDate,
+        CancellationToken ct)
+    {
+        var article = await _service.GetArticleByDateAsync(continent, publicationDate, ct);
 
         if (article is null) return NotFound();
 

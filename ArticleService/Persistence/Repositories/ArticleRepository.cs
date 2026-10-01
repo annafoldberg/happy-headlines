@@ -32,6 +32,20 @@ public class ArticleRepository : IArticleRepository
         return await context.Articles.FirstOrDefaultAsync(a => a.PublicId == id, ct);
     }
 
+    public async Task<IReadOnlyList<Article>> GetByDateAsync(Continent continent, DateOnly publicationDate, CancellationToken ct)
+    {
+        await using var context = _contextFactory.Create(continent);
+
+        var start = publicationDate.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc);
+        var end = start.AddDays(1);
+
+        return await context.Articles
+            .Where(a =>
+                a.PublicationTimestampUtc >= start && 
+                a.PublicationTimestampUtc < end)
+            .ToListAsync(ct);
+    }
+
     public async Task UpdateAsync(Continent continent, Article article, CancellationToken ct)
     {
         await using var context = _contextFactory.Create(continent);
