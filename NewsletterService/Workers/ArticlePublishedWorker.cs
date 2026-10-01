@@ -28,7 +28,7 @@ public sealed class ArticlePublishedWorker : BackgroundService
             // Start consume loop
             await _consumer.RunAsync(HandleArticlePublishedAsync, ct);
         }
-        catch (Exception ex)
+        catch
         {
             await Task.Delay(TimeSpan.FromSeconds(3), ct);
         }
@@ -42,7 +42,7 @@ public sealed class ArticlePublishedWorker : BackgroundService
         {
             payload = JsonSerializer.Deserialize<ArticlePublished>(body.Span, JsonOpts);
         }
-        catch (Exception ex)
+        catch
         {
             return Task.FromResult(false); // Nack: payload is broken, don't requeue
         }

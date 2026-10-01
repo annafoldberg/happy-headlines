@@ -23,7 +23,7 @@ public static class ClientExtensions
 
                 client.BaseAddress = new Uri(options.BaseUrl);
             });
-
+            
         return services;
     }
 }

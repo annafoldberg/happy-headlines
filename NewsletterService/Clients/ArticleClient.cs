@@ -11,9 +11,9 @@ public class ArticleClient : IArticleClient
         _httpClient = httpClient;
     }
 
-    public async Task<ArticleResponse?> GetArticleByDateAsync(ArticleRequest request, CancellationToken ct)
+    public async Task<ArticleResponse?> GetArticleByDateAsync(Continent continent, DateOnly date, CancellationToken ct)
     {
-        var response = await _httpClient.GetAsync($"articles/{request.Continent}?publicationDate={request.PublicationDate:yyyy-MM-dd}", ct);
+        var response = await _httpClient.GetAsync($"articles/{continent}?publicationDate={date:yyyy-MM-dd}", ct);
 
         response.EnsureSuccessStatusCode();
 

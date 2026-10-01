@@ -4,5 +4,5 @@ namespace NewsletterService.Clients;
 
 public interface IArticleClient
 {
-    Task<ArticleResponse?> GetArticleByDateAsync(ArticleRequest request, CancellationToken ct);
+    Task<ArticleResponse?> GetArticleByDateAsync(Continent continent, DateOnly date, CancellationToken ct);
 }
