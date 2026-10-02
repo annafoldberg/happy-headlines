@@ -1,6 +1,9 @@
 using System.Text;
 using System.Text.Json;
 using RabbitMQ.Client;
+using OpenTelemetry;
+using OpenTelemetry.Context.Propagation;
+using System.Diagnostics;
 
 namespace Messaging.RabbitMQ;
 
@@ -15,6 +18,7 @@ public sealed class RabbitMQPublisher : IEventPublisher, IAsyncDisposable
     private readonly int _port;
     private IConnection? _connection;
     private static readonly JsonSerializerOptions _jsonOpts = new(JsonSerializerDefaults.Web);
+    private static readonly TextMapPropagator _propagator = new TraceContextPropagator();
 
     // Ensures that only one caller at a time can initialize the connection
     private readonly SemaphoreSlim _initLock = new(1, 1);
@@ -81,8 +85,20 @@ public sealed class RabbitMQPublisher : IEventPublisher, IAsyncDisposable
         // Serialize event to JSON payload
         var payload = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(@event, _jsonOpts));
 
-        // Set content type and persistence
-        var props = new BasicProperties { ContentType = "application/json", DeliveryMode = DeliveryModes.Persistent };
+        // Set content type, persistence, and message headers
+        var props = new BasicProperties {
+            ContentType = "application/json",
+            DeliveryMode = DeliveryModes.Persistent,
+            Headers = new Dictionary<string, object?>()
+        };
+
+        // Build the propagation context from the current trace
+        var propagationContext = new PropagationContext(Activity.Current?.Context ?? default, Baggage.Current);
+
+        _propagator.Inject(propagationContext, props, static (properties, key, value) =>
+            {
+                properties.Headers![key] = Encoding.UTF8.GetBytes(value);
+            });
 
         // Publish event to exchange with routing key
         await channel.BasicPublishAsync<BasicProperties>(exchange, routingKey, mandatory: false, basicProperties: props, body: payload, cancellationToken: ct)

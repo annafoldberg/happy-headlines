@@ -46,10 +46,12 @@ public static class MonitoringExtensions
         // https://github.com/open-telemetry/opentelemetry-dotnet/blob/main/docs/trace/getting-started-aspnetcore/README.md
         services.AddOpenTelemetry()
             .ConfigureResource(resource => resource
-                .AddService(environment.ApplicationName)) // application that made the trace (e.g. DraftService)
+                .AddService(environment.ApplicationName)) // application that made the trace
             .WithTracing(tracing => tracing
-                .AddSource(TracingSource.ActivitySourceName) // producer of the custom spans (HappyHeadlines)
+                .AddSource(environment.ApplicationName) // producer of the custom spans
+                .AddSource("Messaging.RabbitMQ")
                 .AddAspNetCoreInstrumentation()
+                .AddHttpClientInstrumentation()
                 .AddConsoleExporter()
                 .AddOtlpExporter(options =>
                 {

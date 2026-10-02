@@ -1,5 +1,8 @@
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using OpenTelemetry.Context.Propagation;
+using System.Text;
+using System.Diagnostics;
 
 namespace Messaging.RabbitMQ;
 
@@ -9,6 +12,8 @@ public sealed class RabbitMQConsumer : IEventConsumer
     private IConnection? _connection;
     private IChannel? _channel;
     private string? _queue;
+    private static readonly TextMapPropagator _propagator = new TraceContextPropagator();
+    private static readonly ActivitySource _activitySource = new("Messaging.RabbitMQ");
 
     public RabbitMQConsumer(string host, string user, string pass, int port)
     {
@@ -42,6 +47,24 @@ public sealed class RabbitMQConsumer : IEventConsumer
         var consumer = new AsyncEventingBasicConsumer(_channel!);
         consumer.ReceivedAsync += async (_, ea) =>
         {
+            var parentContext = _propagator.Extract(
+                default,
+                ea.BasicProperties,
+                static (properties, key) =>
+                {
+                    if (properties.Headers is null || !properties.Headers.TryGetValue(key, out var value))
+                    {
+                        return [];
+                    }
+
+                    return value is byte[] bytes ? [Encoding.UTF8.GetString(bytes)] : [];
+                });
+
+            using var activity = _activitySource.StartActivity(
+                "Message received",
+                ActivityKind.Consumer,
+                parentContext.ActivityContext);
+
             var ok = await handler(ea.Body, ct);
             if (ok) await _channel!.BasicAckAsync(ea.DeliveryTag, multiple: false, ct);
             else await _channel!.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: false, ct);

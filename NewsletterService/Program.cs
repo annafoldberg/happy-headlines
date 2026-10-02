@@ -1,4 +1,5 @@
 using Messaging.RabbitMQ;
+using Monitoring;
 using NewsletterService.Clients;
 using NewsletterService.Workers;
 using System.Text.Json.Serialization;
@@ -8,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddClients(builder.Configuration);
 builder.Services.AddHostedService<ArticlePublishedWorker>();
 builder.Services.AddMessaging(builder.Configuration);
+builder.Services.AddMonitoring(builder.Configuration, builder.Environment);
 
 builder.Services
     .AddControllers()

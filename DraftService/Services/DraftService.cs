@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using DraftService.Contracts;
 using DraftService.Mappings;
 using DraftService.Persistence.Repositories;
@@ -9,6 +10,7 @@ public class DraftService : IDraftService
 {
     private readonly IDraftRepository _repository;
     private readonly ILogger<DraftService> _logger;
+    private static readonly ActivitySource _activitySource = new("DraftService");
 
     public DraftService(IDraftRepository repository, ILogger<DraftService> logger)
     {
@@ -18,7 +20,7 @@ public class DraftService : IDraftService
 
     public async Task<DraftResponse> CreateDraftAsync(DraftRequest request, CancellationToken ct)
     {
-        using var activity = TracingSource.ActivitySource.StartActivity("CreateDraft");
+        using var activity = _activitySource.StartActivity("CreateDraft");
 
         var draft = request.ToEntity();
 
@@ -31,7 +33,7 @@ public class DraftService : IDraftService
 
     public async Task<DraftResponse?> GetDraftAsync(Guid id, CancellationToken ct)
     {
-        using var activity = TracingSource.ActivitySource.StartActivity("GetDraft");
+        using var activity = _activitySource.StartActivity("GetDraft");
         
         var draft = await _repository.GetByPublicIdAsync(id, ct);
         
@@ -46,7 +48,7 @@ public class DraftService : IDraftService
 
     public async Task<DraftOperationResult> UpdateDraftAsync(Guid id, DraftRequest request, CancellationToken ct)
     {
-        using var activity = TracingSource.ActivitySource.StartActivity("UpdateDraft");
+        using var activity = _activitySource.StartActivity("UpdateDraft");
 
         var draft = await _repository.GetByPublicIdAsync(id, ct);
 
@@ -70,7 +72,7 @@ public class DraftService : IDraftService
 
     public async Task<DraftOperationResult> DeleteDraftAsync(Guid id, CancellationToken ct)
     {
-        using var activity = TracingSource.ActivitySource.StartActivity("DeleteDraft");
+        using var activity = _activitySource.StartActivity("DeleteDraft");
 
         var draft = await _repository.GetByPublicIdAsync(id, ct);
 
