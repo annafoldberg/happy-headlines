@@ -9,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddScoped<IArticleService, ArticleService.Services.ArticleService>();
 builder.Services.AddHostedService<ArticlePublishedWorker>();
-builder.Services.AddSingleton<IEventConsumer, RabbitMQConsumer>();
+builder.Services.AddMessaging(builder.Configuration);
 
 builder.Services
     .AddControllers()
@@ -17,7 +17,7 @@ builder.Services
         options.JsonSerializerOptions.Converters.Add(
             new JsonStringEnumConverter()));
 
-builder.Services.AddSwaggerGen();    
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 

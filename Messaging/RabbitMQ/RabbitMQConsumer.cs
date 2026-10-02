@@ -10,13 +10,14 @@ public sealed class RabbitMQConsumer : IEventConsumer
     private IChannel? _channel;
     private string? _queue;
 
-    public RabbitMQConsumer(string host, string user, string pass)
+    public RabbitMQConsumer(string host, string user, string pass, int port)
     {
         _factory = new ConnectionFactory
         {
             HostName = host,
             UserName = user,
             Password = pass,
+            Port = port,
             AutomaticRecoveryEnabled = true
         };
     }

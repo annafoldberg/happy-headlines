@@ -18,10 +18,59 @@ x-article-database: &article-database
     test: ["CMD-SHELL", "pg_isready -U happy-headlines -d articles"]
 
 services:
+  rabbitmq:
+    image: rabbitmq:management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: happy-headlines
+      RABBITMQ_DEFAULT_PASS: happy-headlines
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+
+  aspire-dashboard:
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:latest
+    ports:
+      - "18888:18888"
+      - "4317:18889"
+
+  seq:
+    image: datalust/seq
+    ports:
+      - "5341:80"
+    volumes:
+      - seq-data:/data
+    environment:
+      - ACCEPT_EULA=Y
+
+  publisher-service:
+    image: publisher-service:latest
+    ports:
+      - "8085:8080"
+    environment:
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Port: 5672
+      RabbitMQ__User: happy-headlines
+      RabbitMQ__Password: happy-headlines
+
+  newsletter-service:
+    image: newsletter-service:latest
+    ports:
+      - "8084:8080"
+    environment:
+      ArticleClient__BaseUrl: http://article-service:8080
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Port: 5672
+      RabbitMQ__User: happy-headlines
+      RabbitMQ__Password: happy-headlines
+
   draft-service:
     image: draft-service:latest
-    ports: "8083:8080"
+    ports:
+      - "8083:8080"
     environment:
+      Seq__SeqUrl: http://seq
       DraftDatabase__Host: draft-database
       DraftDatabase__Name: drafts
       DraftDatabase__User: happy-headlines
@@ -42,6 +91,7 @@ services:
     ports:
       - "8081:8080"
     environment:
+      ProfanityClient__BaseUrl: http://profanity-service:8080
       CommentDatabase__Host: comment-database
       CommentDatabase__Name: comments
       CommentDatabase__User: happy-headlines
@@ -52,6 +102,10 @@ services:
     ports:
       - "8080:8080"
     environment:
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Port: 5672
+      RabbitMQ__User: happy-headlines
+      RabbitMQ__Password: happy-headlines
       ArticleDatabase__Africa__Host: article-database-africa
       ArticleDatabase__Antarctica__Host: article-database-antarctica
       ArticleDatabase__Asia__Host: article-database-asia
@@ -151,6 +205,8 @@ services:
       - ./ArticleDatabase/init:/docker-entrypoint-initdb.d:ro
 
 volumes:
+  seq-data:
+  rabbitmq-data:
   draft-database-data:
   profanity-database-data:
   comment-database-data:

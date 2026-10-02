@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IPublisherService, PublisherService.Services.PublisherService>();
-builder.Services.AddSingleton<IEventPublisher, RabbitMQPublisher>();
+builder.Services.AddMessaging(builder.Configuration);
 
 builder.Services
     .AddControllers()
