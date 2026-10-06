@@ -66,11 +66,17 @@ Valid `continent` values:
 }
 ```
 
-## Running the Project with Docker Swarm
+## Running the System with Docker Swarm
+> Run the following commands from the project root
 
-### Build ArticleService Image
+### Build Service Images
 ```bash
 docker build -t article-service:latest -f ArticleService/Dockerfile .
+docker build -t comment-service:latest -f CommentService/Dockerfile .
+docker build -t draft-service:latest -f DraftService/Dockerfile .
+docker build -t newsletter-service:latest -f NewsletterService/Dockerfile .
+docker build -t profanity-service:latest -f ProfanityService/Dockerfile .
+docker build -t publisher-service:latest -f PublisherService/Dockerfile .
 ```
 
 ### Initialize Docker Swarm
@@ -99,19 +105,19 @@ docker stack services happy-headlines
 docker ps
 ```
 
-### View ArticleService Replicas
+### View Service Replicas
 ```bash
-docker service ps happy-headlines_article-service
+docker service ps happy-headlines_<service>
 ```
 
 ### Verify Tables
 ```bash
-docker exec -it <container-id> psql -U happy-headlines -d articles -c "\dt"
+docker exec -it <container-id> psql -U happy-headlines -d <database> -c "\dt"
 ```
 
 ### Verify Data
 ```bash
-docker exec -it <container-id> psql -U happy-headlines -d articles -c "SELECT * FROM <table>;"
+docker exec -it <container-id> psql -U happy-headlines -d <database> -c "SELECT * FROM <table>;"
 ```
 
 ## Stopping the Project
@@ -123,6 +129,11 @@ docker stack rm happy-headlines
 ### Delete Database Volumes
 ```bash
 docker volume rm \
+  happy-headlines_seq-data \
+  happy-headlines_rabbitmq-data \
+  happy-headlines_draft-database-data \
+  happy-headlines_profanity-database-data \
+  happy-headlines_comment-database-data \
   happy-headlines_article-database-africa-data \
   happy-headlines_article-database-antarctica-data \
   happy-headlines_article-database-asia-data \
@@ -130,7 +141,7 @@ docker volume rm \
   happy-headlines_article-database-north-america-data \
   happy-headlines_article-database-oceania-data \
   happy-headlines_article-database-south-america-data \
-  happy-headlines_article-database-global-data
+  happy-headlines_article-database-global-data 
 ```
 
 ### Leave Docker Swarm

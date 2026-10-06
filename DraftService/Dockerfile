@@ -4,10 +4,12 @@ WORKDIR /src
 
 # Copy and restore project file for caching
 COPY ./DraftService/DraftService.csproj ./DraftService/
+COPY ./Monitoring/Monitoring.csproj ./Monitoring/
 RUN dotnet restore ./DraftService/DraftService.csproj
 
 # Copy remaining relevant source
 COPY ./DraftService/ ./DraftService/
+COPY ./Monitoring/ ./Monitoring/
 
 # Build and publish release
 WORKDIR /src/DraftService

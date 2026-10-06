@@ -6,6 +6,7 @@ using Serilog.Events;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Microsoft.Extensions.Hosting;
+using OpenTelemetry.Metrics;
 
 namespace Monitoring;
 
@@ -56,7 +57,14 @@ public static class MonitoringExtensions
                 .AddOtlpExporter(options =>
                 {
                     options.Endpoint = new Uri("http://aspire-dashboard:18889");
-                }));
+                }))
+            .WithMetrics(metrics =>
+            {
+                metrics
+                    .AddMeter("ArticleService.Caching")
+                    .AddMeter("CommentService.Caching")
+                    .AddPrometheusExporter();
+            });
 
         return services;
     }

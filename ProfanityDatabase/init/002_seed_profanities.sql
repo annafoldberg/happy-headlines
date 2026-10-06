@@ -1,7 +1,7 @@
 INSERT INTO profanities (term)
 VALUES
     ('shit'),
-    ('shitty')
+    ('shitty'),
     ('damn'),
     ('dammit')
 ON CONFLICT DO NOTHING;

@@ -18,6 +18,26 @@ x-article-database: &article-database
     test: ["CMD-SHELL", "pg_isready -U happy-headlines -d articles"]
 
 services:
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
+  article-cache:
+    image: redis:8-alpine
+
+  comment-cache:
+    image: redis:8-alpine
+
   rabbitmq:
     image: rabbitmq:management
     ports:
@@ -42,13 +62,16 @@ services:
     volumes:
       - seq-data:/data
     environment:
-      - ACCEPT_EULA=Y
+      ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
 
   publisher-service:
     image: publisher-service:latest
     ports:
       - "8085:8080"
     environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      Seq__SeqUrl: http://seq
       RabbitMQ__Host: rabbitmq
       RabbitMQ__Port: 5672
       RabbitMQ__User: happy-headlines
@@ -59,6 +82,8 @@ services:
     ports:
       - "8084:8080"
     environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      Seq__SeqUrl: http://seq
       ArticleClient__BaseUrl: http://article-service:8080
       RabbitMQ__Host: rabbitmq
       RabbitMQ__Port: 5672
@@ -70,6 +95,7 @@ services:
     ports:
       - "8083:8080"
     environment:
+      ASPNETCORE_ENVIRONMENT: Development
       Seq__SeqUrl: http://seq
       DraftDatabase__Host: draft-database
       DraftDatabase__Name: drafts
@@ -81,6 +107,7 @@ services:
     ports:
       - "8082:8080"
     environment:
+      ASPNETCORE_ENVIRONMENT: Development
       ProfanityDatabase__Host: profanity-database
       ProfanityDatabase__Name: profanities
       ProfanityDatabase__User: happy-headlines
@@ -91,6 +118,10 @@ services:
     ports:
       - "8081:8080"
     environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      CommentCache__Host: comment-cache
+      CommentCache__Port: 6379
+      Seq__SeqUrl: http://seq
       ProfanityClient__BaseUrl: http://profanity-service:8080
       CommentDatabase__Host: comment-database
       CommentDatabase__Name: comments
@@ -102,6 +133,10 @@ services:
     ports:
       - "8080:8080"
     environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ArticleCache__Host: article-cache
+      ArticleCache__Port: 6379
+      Seq__SeqUrl: http://seq
       RabbitMQ__Host: rabbitmq
       RabbitMQ__Port: 5672
       RabbitMQ__User: happy-headlines

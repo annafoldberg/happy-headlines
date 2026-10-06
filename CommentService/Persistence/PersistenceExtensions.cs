@@ -1,5 +1,7 @@
 using CommentService.Persistence.Contexts;
 using CommentService.Persistence.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace CommentService.Persistence;
 
@@ -18,7 +20,25 @@ public static class PersistenceExtensions
                 "Database configuration is incomplete.")
             .ValidateOnStart();
 
-        services.AddScoped<ICommentDbContext, CommentDbContext>();
+        services.AddDbContext<CommentDbContext>((serviceProvider, options) =>
+        {
+            var databaseOptions = serviceProvider
+                .GetRequiredService<IOptions<DatabaseOptions>>()
+                .Value;
+
+            var connectionString =
+                $"Host={databaseOptions.Host};" +
+                $"Database={databaseOptions.Name};" +
+                $"Username={databaseOptions.User};" +
+                $"Password={databaseOptions.Password}";
+
+            options.UseNpgsql(connectionString);
+        });
+
+        services.AddScoped<ICommentDbContext>(
+            provider => provider.GetRequiredService<CommentDbContext>());
+
+
         services.AddScoped<ICommentRepository, CommentRepository>();
 
         return services;

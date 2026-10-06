@@ -1,3 +1,4 @@
+using ArticleService.Caching;
 using ArticleService.Contracts;
 using ArticleService.Mappings;
 using ArticleService.Persistence.Repositories;
@@ -9,10 +10,12 @@ namespace ArticleService.Services;
 public class ArticleService : IArticleService
 {
     private readonly IArticleRepository _repository;
+    private readonly IArticleCache _cache;
 
-    public ArticleService(IArticleRepository repository)
+    public ArticleService(IArticleRepository repository, IArticleCache cache)
     {
         _repository = repository;
+        _cache = cache;
     }
 
     public async Task CreateFromPublishedArticleAsync(ArticlePublished articlePublished, CancellationToken ct)
@@ -34,6 +37,15 @@ public class ArticleService : IArticleService
 
     public async Task<ArticleResponse?> GetArticleByIdAsync(Continent continent, Guid id, CancellationToken ct)
     {
+        // Check cache
+        if (continent == Continent.Global)
+        {
+            var cachedArticle = await _cache.GetByPublicIdAsync(id, ct);
+
+            if (cachedArticle is not null) return cachedArticle.ToResponse();
+        }
+
+        // Read from database
         var article = await _repository.GetByPublicIdAsync(continent, id, ct);
         
         if (article is null) return null;

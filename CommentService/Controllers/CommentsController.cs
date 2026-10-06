@@ -26,6 +26,14 @@ public class CommentsController: ControllerBase
             comment);
     }
 
+    [HttpGet("article/{articleId}")]
+    public async Task<IActionResult> GetCommentsByArticleId(Guid articleId, CancellationToken ct)
+    {
+        var comments = await _service.GetCommentsByArticleIdAsync(articleId, ct);
+
+        return Ok(comments);
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetComment([FromRoute] Guid id, CancellationToken ct)
     {

@@ -1,5 +1,7 @@
 using DraftService.Persistence.Contexts;
 using DraftService.Persistence.Repositories;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace DraftService.Persistence;
 
@@ -18,7 +20,24 @@ public static class PersistenceExtensions
                 "Database configuration is incomplete.")
             .ValidateOnStart();
 
-        services.AddScoped<IDraftDbContext, DraftDbContext>();
+        services.AddDbContext<DraftDbContext>((serviceProvider, options) =>
+        {
+            var databaseOptions = serviceProvider
+                .GetRequiredService<IOptions<DatabaseOptions>>()
+                .Value;
+
+            var connectionString =
+                $"Host={databaseOptions.Host};" +
+                $"Database={databaseOptions.Name};" +
+                $"Username={databaseOptions.User};" +
+                $"Password={databaseOptions.Password}";
+
+            options.UseNpgsql(connectionString);
+        });
+
+        services.AddScoped<IDraftDbContext>(
+            provider => provider.GetRequiredService<DraftDbContext>());
+
         services.AddScoped<IDraftRepository, DraftRepository>();
 
         return services;

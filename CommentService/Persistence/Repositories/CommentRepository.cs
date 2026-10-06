@@ -19,6 +19,11 @@ public class CommentRepository : ICommentRepository
         await _context.SaveChangesAsync(ct);
     }
 
+    public async Task<IReadOnlyList<Comment>> GetByArticleIdAsync(Guid articleId, CancellationToken ct)
+    {
+        return await _context.Comments.Where(c => c.ArticleId == articleId).ToListAsync(ct);
+    }
+
     public async Task<Comment?> GetByPublicIdAsync(Guid id, CancellationToken ct)
     {
         return await _context.Comments.FirstOrDefaultAsync(c => c.PublicId == id, ct);

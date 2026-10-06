@@ -25,6 +25,13 @@ public class ArticleRepository : IArticleRepository
         await context.SaveChangesAsync(ct);
     }
 
+    public async Task<IReadOnlyList<Article>> GetRecentAsync(Continent continent, DateTime fromUtc, CancellationToken ct)
+    {
+        await using var context = _contextFactory.Create(continent);
+
+        return await context.Articles.Where(a => a.PublicationTimestampUtc >= fromUtc).ToListAsync(ct);
+    }
+
     public async Task<Article?> GetByPublicIdAsync(Continent continent, Guid id, CancellationToken ct)
     {
         await using var context = _contextFactory.Create(continent);

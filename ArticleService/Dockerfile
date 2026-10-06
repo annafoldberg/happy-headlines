@@ -4,10 +4,14 @@ WORKDIR /src
 
 # Copy and restore project file for caching
 COPY ./ArticleService/ArticleService.csproj ./ArticleService/
+COPY ./Messaging/Messaging.csproj ./Messaging/
+COPY ./Monitoring/Monitoring.csproj ./Monitoring/
 RUN dotnet restore ./ArticleService/ArticleService.csproj
 
 # Copy remaining relevant source
 COPY ./ArticleService/ ./ArticleService/
+COPY ./Messaging/ ./Messaging/
+COPY ./Monitoring/ ./Monitoring/
 
 # Build and publish release
 WORKDIR /src/ArticleService

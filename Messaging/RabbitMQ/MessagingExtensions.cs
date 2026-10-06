@@ -14,7 +14,8 @@ public static class MessagingExtensions
             .Validate(options =>
                 !string.IsNullOrWhiteSpace(options.Host) &&
                 !string.IsNullOrWhiteSpace(options.User) &&
-                !string.IsNullOrWhiteSpace(options.Password),
+                !string.IsNullOrWhiteSpace(options.Password) &&
+                options.Port > 0,
                 "RabbitMQ configuration is incomplete.")
             .ValidateOnStart();
 
@@ -40,7 +41,8 @@ public static class MessagingExtensions
             return new RabbitMQConsumer(
                 options.Host,
                 options.User,
-                options.Password);
+                options.Password,
+                options.Port);
         });
 
         return services;

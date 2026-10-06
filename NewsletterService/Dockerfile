@@ -3,20 +3,22 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0@sha256:478b9038d187e5b5c29bfa8173ded5d29e
 WORKDIR /src
 
 # Copy and restore project file for caching
-COPY ./CommentService/CommentService.csproj ./CommentService/
+COPY ./NewsletterService/NewsletterService.csproj ./NewsletterService/
+COPY ./Messaging/Messaging.csproj ./Messaging/
 COPY ./Monitoring/Monitoring.csproj ./Monitoring/
-RUN dotnet restore ./CommentService/CommentService.csproj
+RUN dotnet restore ./NewsletterService/NewsletterService.csproj
 
 # Copy remaining relevant source
-COPY ./CommentService/ ./CommentService/
+COPY ./NewsletterService/ ./NewsletterService/
+COPY ./Messaging/ ./Messaging/
 COPY ./Monitoring/ ./Monitoring/
 
 # Build and publish release
-WORKDIR /src/CommentService
+WORKDIR /src/NewsletterService
 RUN dotnet publish -c Release -o /out
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:10.0@sha256:a04d1c1d2d26119049494057d80ea6cda25bbd8aef7c444a1fc1ef874fd3955b
 WORKDIR /app
 COPY --from=build /out .
-ENTRYPOINT ["dotnet", "CommentService.dll"]
+ENTRYPOINT ["dotnet", "NewsletterService.dll"]
