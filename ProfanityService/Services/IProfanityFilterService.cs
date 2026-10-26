@@ -4,5 +4,5 @@ namespace ProfanityService.Services;
 
 public interface IProfanityFilterService
 {
-    Task<FilterCommentResponse> FilterCommentAsync(FilterCommentRequest request, CancellationToken ct);
+    Task<FilterContentResponse> FilterContentAsync(FilterContentRequest request, CancellationToken ct);
 }

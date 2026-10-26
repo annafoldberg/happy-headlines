@@ -19,6 +19,7 @@ public sealed class RabbitMQPublisher : IEventPublisher, IAsyncDisposable
     private IConnection? _connection;
     private static readonly JsonSerializerOptions _jsonOpts = new(JsonSerializerDefaults.Web);
     private static readonly TextMapPropagator _propagator = new TraceContextPropagator();
+    private static readonly ActivitySource _activitySource = new("Messaging.RabbitMQ");
 
     // Ensures that only one caller at a time can initialize the connection
     private readonly SemaphoreSlim _initLock = new(1, 1);
@@ -92,9 +93,13 @@ public sealed class RabbitMQPublisher : IEventPublisher, IAsyncDisposable
             Headers = new Dictionary<string, object?>()
         };
 
+        // Start producer activity
+        using var activity = _activitySource.StartActivity("MessagePublished", ActivityKind.Producer);
+
         // Build the propagation context from the current trace
         var propagationContext = new PropagationContext(Activity.Current?.Context ?? default, Baggage.Current);
 
+        // Inject trace context into message headers
         _propagator.Inject(propagationContext, props, static (properties, key, value) =>
             {
                 properties.Headers![key] = Encoding.UTF8.GetBytes(value);

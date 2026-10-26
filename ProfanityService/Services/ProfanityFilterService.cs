@@ -13,19 +13,19 @@ public class ProfanityFilterService : IProfanityFilterService
         _repository = repository;
     }
 
-    public async Task<FilterCommentResponse> FilterCommentAsync(FilterCommentRequest request, CancellationToken ct)
+    public async Task<FilterContentResponse> FilterContentAsync(FilterContentRequest request, CancellationToken ct)
     {
         var profanities = await _repository.GetAllTermsAsync(ct);
 
         var profanitySet = profanities.ToHashSet(StringComparer.OrdinalIgnoreCase);
         
-        var filteredComment = Regex.Replace(
-            request.Comment,
+        var filteredContent = Regex.Replace(
+            request.Content,
             @"\b[\p{L}']+\b",
             match => profanitySet.Contains(match.Value)
                 ? new string('*', match.Value.Length)
                 : match.Value);
 
-        return new FilterCommentResponse { Comment = filteredComment };
+        return new FilterContentResponse { Content = filteredContent };
     }
 }

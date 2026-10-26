@@ -72,6 +72,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       Seq__SeqUrl: http://seq
+      Aspire__AspireUrl: http://aspire-dashboard:18889
       RabbitMQ__Host: rabbitmq
       RabbitMQ__Port: 5672
       RabbitMQ__User: happy-headlines
@@ -84,6 +85,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       Seq__SeqUrl: http://seq
+      Aspire__AspireUrl: http://aspire-dashboard:18889
       ArticleClient__BaseUrl: http://article-service:8080
       RabbitMQ__Host: rabbitmq
       RabbitMQ__Port: 5672
@@ -97,6 +99,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       Seq__SeqUrl: http://seq
+      Aspire__AspireUrl: http://aspire-dashboard:18889
       DraftDatabase__Host: draft-database
       DraftDatabase__Name: drafts
       DraftDatabase__User: happy-headlines
@@ -122,6 +125,7 @@ services:
       CommentCache__Host: comment-cache
       CommentCache__Port: 6379
       Seq__SeqUrl: http://seq
+      Aspire__AspireUrl: http://aspire-dashboard:18889
       ProfanityClient__BaseUrl: http://profanity-service:8080
       CommentDatabase__Host: comment-database
       CommentDatabase__Name: comments
@@ -137,6 +141,7 @@ services:
       ArticleCache__Host: article-cache
       ArticleCache__Port: 6379
       Seq__SeqUrl: http://seq
+      Aspire__AspireUrl: http://aspire-dashboard:18889
       RabbitMQ__Host: rabbitmq
       RabbitMQ__Port: 5672
       RabbitMQ__User: happy-headlines

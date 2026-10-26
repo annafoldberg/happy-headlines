@@ -16,11 +16,11 @@ public class ProfanitiesController : ControllerBase
     }
 
     [HttpPost("filter")]
-    public async Task<IActionResult> FilterComment(
-        [FromBody] FilterCommentRequest request,
+    public async Task<IActionResult> FilterContent(
+        [FromBody] FilterContentRequest request,
         CancellationToken ct)
     {
-        var response =  await _filterService.FilterCommentAsync(request, ct);
+        var response =  await _filterService.FilterContentAsync(request, ct);
 
         return Ok(response);
     }

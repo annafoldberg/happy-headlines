@@ -7,6 +7,7 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Microsoft.Extensions.Hosting;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Exporter;
 
 namespace Monitoring;
 
@@ -23,6 +24,14 @@ public static class MonitoringExtensions
             .Validate(options =>
                 !string.IsNullOrWhiteSpace(options.SeqUrl),
                 "Seq configuration is incomplete.")
+            .ValidateOnStart();
+
+        services
+            .AddOptions<AspireOptions>()
+            .Bind(configuration.GetSection(AspireOptions.SectionName))
+            .Validate(options =>
+                !string.IsNullOrWhiteSpace(options.AspireUrl),
+                "Aspire configuration is incomplete.")
             .ValidateOnStart();
 
         // https://github.com/serilog/serilog-aspnetcore
@@ -44,6 +53,13 @@ public static class MonitoringExtensions
                 .WriteTo.Seq(seqOptions.SeqUrl);
         });
 
+        services
+            .AddOptions<OtlpExporterOptions>("Aspire")
+            .Configure<IOptions<AspireOptions>>((options, aspireOptions) =>
+            {
+                options.Endpoint = new Uri(aspireOptions.Value.AspireUrl);
+            });
+
         // https://github.com/open-telemetry/opentelemetry-dotnet/blob/main/docs/trace/getting-started-aspnetcore/README.md
         services.AddOpenTelemetry()
             .ConfigureResource(resource => resource
@@ -51,13 +67,14 @@ public static class MonitoringExtensions
             .WithTracing(tracing => tracing
                 .AddSource(environment.ApplicationName) // producer of the custom spans
                 .AddSource("Messaging.RabbitMQ")
-                .AddAspNetCoreInstrumentation()
+                .AddAspNetCoreInstrumentation(options =>
+                {
+                    options.Filter = context =>
+                        !context.Request.Path.StartsWithSegments("/metrics");
+                })
                 .AddHttpClientInstrumentation()
                 .AddConsoleExporter()
-                .AddOtlpExporter(options =>
-                {
-                    options.Endpoint = new Uri("http://aspire-dashboard:18889");
-                }))
+                .AddOtlpExporter("Aspire", configure: null))
             .WithMetrics(metrics =>
             {
                 metrics

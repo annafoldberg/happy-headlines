@@ -20,20 +20,29 @@ public sealed class ArticlePublishedWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
-        try
-        {
-            // Declare queue
-            const string queue = "article.article-published";
+        // Declare queue
+        const string queue = "article.article-published";
 
-            // Subscribe to ArticlePublished fanout exchange
-            await _consumer.SubscribeAsync(queue, Exchanges.ArticlePublished, ct);
-
-            // Start consume loop
-            await _consumer.RunAsync(HandleArticlePublishedAsync, ct);
-        }
-        catch (Exception ex)
+        while (!ct.IsCancellationRequested)
         {
-            await Task.Delay(TimeSpan.FromSeconds(3), ct);
+            try
+            {
+                // Subscribe to ArticlePublished fanout exchange
+                await _consumer.SubscribeAsync(queue, Exchanges.ArticlePublished, ct);
+
+                // Start consume loop
+                await _consumer.RunAsync(HandleArticlePublishedAsync, ct);
+            }
+
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                break;
+            }
+
+            catch
+            {
+                await Task.Delay(TimeSpan.FromSeconds(3), ct);
+            }
         }
     }
 

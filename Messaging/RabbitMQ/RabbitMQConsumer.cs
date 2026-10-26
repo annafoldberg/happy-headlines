@@ -60,10 +60,7 @@ public sealed class RabbitMQConsumer : IEventConsumer
                     return value is byte[] bytes ? [Encoding.UTF8.GetString(bytes)] : [];
                 });
 
-            using var activity = _activitySource.StartActivity(
-                "Message received",
-                ActivityKind.Consumer,
-                parentContext.ActivityContext);
+            using var activity = _activitySource.StartActivity("MessageReceived", ActivityKind.Consumer, parentContext.ActivityContext);
 
             var ok = await handler(ea.Body, ct);
             if (ok) await _channel!.BasicAckAsync(ea.DeliveryTag, multiple: false, ct);

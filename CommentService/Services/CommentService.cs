@@ -21,10 +21,10 @@ public class CommentService : ICommentService
 
     public async Task<CommentResponse> CreateCommentAsync(Guid articleId, CreateCommentRequest request, CancellationToken ct)
     {
-        var filterRequest = new FilterCommentRequest { Comment = request.Content };
-        var filterResponse = await _client.FilterCommentAsync(filterRequest, ct);
+        var filterRequest = new FilterContentRequest { Content = request.Content };
+        var filterResponse = await _client.FilterContentAsync(filterRequest, ct);
 
-        var comment = request.ToEntity(articleId, filterResponse.Comment);
+        var comment = request.ToEntity(articleId, filterResponse.Content);
 
         await _repository.AddAsync(comment, ct);
 
@@ -66,18 +66,12 @@ public class CommentService : ICommentService
         
         var changed = false;
 
-        if (request.Author is not null && request.Author != comment.Author)
-        {
-            comment.Author = request.Author;
-            changed = true;
-        }
-
         if (request.Content is not null && request.Content != comment.Content)
         {
-            var filterRequest = new FilterCommentRequest { Comment = request.Content };
-            var filterResponse = await _client.FilterCommentAsync(filterRequest, ct);
+            var filterRequest = new FilterContentRequest { Content = request.Content };
+            var filterResponse = await _client.FilterContentAsync(filterRequest, ct);
 
-            comment.Content = filterResponse.Comment;
+            comment.Content = filterResponse.Content;
             changed = true;
         }
 

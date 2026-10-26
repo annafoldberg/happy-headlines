@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using ArticleService.Caching;
 using ArticleService.Contracts;
 using ArticleService.Mappings;
@@ -11,6 +12,7 @@ public class ArticleService : IArticleService
 {
     private readonly IArticleRepository _repository;
     private readonly IArticleCache _cache;
+    private static readonly ActivitySource _activitySource = new("ArticleService");
 
     public ArticleService(IArticleRepository repository, IArticleCache cache)
     {
@@ -20,6 +22,8 @@ public class ArticleService : IArticleService
 
     public async Task CreateFromPublishedArticleAsync(ArticlePublished articlePublished, CancellationToken ct)
     {
+        using var activity = _activitySource.StartActivity("CreateFromPublishedArticle");
+
         var article = articlePublished.ToEntity();
         var continent = articlePublished.Continent.ToArticleContinent();
 
@@ -55,6 +59,8 @@ public class ArticleService : IArticleService
 
     public async Task<ArticleResponse?> GetArticleByDateAsync(Continent continent, DateOnly publicationDate, CancellationToken ct)
     {
+        using var activity = _activitySource.StartActivity("GetArticleByDate");
+
         var articles = await _repository.GetByDateAsync(continent, publicationDate, ct);
 
         if (articles.Count == 0) return null;

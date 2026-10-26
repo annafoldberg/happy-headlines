@@ -1,11 +1,13 @@
 using Messaging.RabbitMQ;
 using Monitoring;
 using NewsletterService.Clients;
+using NewsletterService.Services;
 using NewsletterService.Workers;
 using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddScoped<INewsletterService, NewsletterService.Services.NewsletterService>();
 builder.Services.AddClients(builder.Configuration);
 builder.Services.AddHostedService<ArticlePublishedWorker>();
 builder.Services.AddMessaging(builder.Configuration);

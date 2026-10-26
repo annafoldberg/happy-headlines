@@ -17,20 +17,29 @@ public sealed class ArticlePublishedWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
-        try
-        {
-            // Declare queue
-            const string queue = "newsletter.article-published";
+        // Declare queue
+        const string queue = "newsletter.article-published";
 
-            // Subscribe to ArticlePublished fanout exchange
-            await _consumer.SubscribeAsync(queue, Exchanges.ArticlePublished, ct);
-
-            // Start consume loop
-            await _consumer.RunAsync(HandleArticlePublishedAsync, ct);
-        }
-        catch
+        while (!ct.IsCancellationRequested)
         {
-            await Task.Delay(TimeSpan.FromSeconds(3), ct);
+            try
+            {
+                // Subscribe to ArticlePublished fanout exchange
+                await _consumer.SubscribeAsync(queue, Exchanges.ArticlePublished, ct);
+
+                // Start consume loop
+                await _consumer.RunAsync(HandleArticlePublishedAsync, ct);
+            }
+
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
+            {
+                break;
+            }
+
+            catch
+            {
+                await Task.Delay(TimeSpan.FromSeconds(3), ct);
+            }
         }
     }
 
@@ -51,6 +60,6 @@ public sealed class ArticlePublishedWorker : BackgroundService
 
         Console.WriteLine($"Received article {payload.Title}");
 
-        return Task.FromResult(false); // Ack
+        return Task.FromResult(true); // Ack
     }
 }

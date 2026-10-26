@@ -2,8 +2,8 @@ using System.ComponentModel.DataAnnotations;
 
 namespace ProfanityService.Contracts;
 
-public class FilterCommentRequest
+public class FilterContentRequest
 {
     [Required]
-    public string Comment { get; set; } = string.Empty;
+    public string Content { get; set; } = string.Empty;
 }
