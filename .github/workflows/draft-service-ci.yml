@@ -10,16 +10,16 @@ on:
     paths:
       - 'DraftService/**'
       - 'Monitoring/**'
-      - '.github/workflows/draft-service-ci.yml
-      - '.github/workflows/draft-service-cd.yml
+      - '.github/workflows/draft-service-ci.yml'
+      - '.github/workflows/draft-service-cd.yml'
   pull_request:
     branches:
       - main
     paths:
       - 'DraftService/**'
       - 'Monitoring/**'
-      - '.github/workflows/draft-service-ci.yml
-      - '.github/workflows/draft-service-cd.yml
+      - '.github/workflows/draft-service-ci.yml'
+      - '.github/workflows/draft-service-cd.yml'
 
 permissions:
   contents: read

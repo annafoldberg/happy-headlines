@@ -11,8 +11,8 @@ on:
       - 'NewsletterService/**'
       - 'Messaging/**'
       - 'Monitoring/**'
-      - '.github/workflows/newsletter-service-ci.yml
-      - '.github/workflows/newsletter-service-cd.yml
+      - '.github/workflows/newsletter-service-ci.yml'
+      - '.github/workflows/newsletter-service-cd.yml'
   pull_request:
     branches:
       - main
@@ -20,8 +20,8 @@ on:
       - 'NewsletterService/**'
       - 'Messaging/**'
       - 'Monitoring/**'
-      - '.github/workflows/newsletter-service-ci.yml
-      - '.github/workflows/newsletter-service-cd.yml
+      - '.github/workflows/newsletter-service-ci.yml'
+      - '.github/workflows/newsletter-service-cd.yml'
 
 permissions:
   contents: read

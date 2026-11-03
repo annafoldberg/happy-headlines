@@ -9,15 +9,15 @@ on:
       - main
     paths:
       - 'ProfanityService/**'
-      - '.github/workflows/profanity-service-ci.yml
-      - '.github/workflows/profanity-service-cd.yml
+      - '.github/workflows/profanity-service-ci.yml'
+      - '.github/workflows/profanity-service-cd.yml'
   pull_request:
     branches:
       - main
     paths:
       - 'ProfanityService/**'
-      - '.github/workflows/profanity-service-ci.yml
-      - '.github/workflows/profanity-service-cd.yml
+      - '.github/workflows/profanity-service-ci.yml'
+      - '.github/workflows/profanity-service-cd.yml'
 
 permissions:
   contents: read

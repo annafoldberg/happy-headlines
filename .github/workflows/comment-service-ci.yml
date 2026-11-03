@@ -10,16 +10,16 @@ on:
     paths:
       - 'CommentService/**'
       - 'Monitoring/**'
-      - '.github/workflows/comment-service-ci.yml
-      - '.github/workflows/comment-service-cd.yml
+      - '.github/workflows/comment-service-ci.yml'
+      - '.github/workflows/comment-service-cd.yml'
   pull_request:
     branches:
       - main
     paths:
       - 'CommentService/**'
       - 'Monitoring/**'
-      - '.github/workflows/comment-service-ci.yml
-      - '.github/workflows/comment-service-cd.yml
+      - '.github/workflows/comment-service-ci.yml'
+      - '.github/workflows/comment-service-cd.yml'
 
 permissions:
   contents: read

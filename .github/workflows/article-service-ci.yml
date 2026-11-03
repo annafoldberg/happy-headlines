@@ -11,8 +11,8 @@ on:
       - 'ArticleService/**'
       - 'Messaging/**'
       - 'Monitoring/**'
-      - '.github/workflows/article-service-ci.yml
-      - '.github/workflows/article-service-cd.yml
+      - '.github/workflows/article-service-ci.yml'
+      - '.github/workflows/article-service-cd.yml'
   pull_request:
     branches:
       - main
@@ -20,8 +20,8 @@ on:
       - 'ArticleService/**'
       - 'Messaging/**'
       - 'Monitoring/**'
-      - '.github/workflows/article-service-ci.yml
-      - '.github/workflows/article-service-cd.yml
+      - '.github/workflows/article-service-ci.yml'
+      - '.github/workflows/article-service-cd.yml'
 
 permissions:
   contents: read
