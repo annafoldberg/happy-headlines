@@ -499,6 +499,23 @@ Cache-on-miss approach. The cache stores comments for up to 30 recently accessed
   <img alt="Comment cache invalidation" src="./docs/figures/comment-cache-invalidation-low-level-light.png" width="700">
 </picture>
 
+## CI/CD Pipeline
+The CI/CD pipelines follow the same workflow to automatically build and publish versioned Docker images to GitHub Container Registry.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/figures/ci-cd-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="./docs/figures/ci-cd-light.png">
+  <img alt="CI/CD pipeline" src="./docs/figures/ci-cd-light.png">
+</picture>
+
+CI/CD pipelines exist for:
+- ArticleService
+- CommentService
+- DraftService
+- NewsletterService
+- ProfanityService
+- PublisherService
+
 ## Running the System with Docker Swarm
 > Run the following commands from the project root
 

@@ -1,0 +1,43 @@
+# CommentService CI workflow
+# - Builds on pull requests and pushes to main.
+
+name: CommentService CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'CommentService/**'
+      - 'Monitoring/**'
+      - '.github/workflows/comment-service-ci.yml
+      - '.github/workflows/comment-service-cd.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'CommentService/**'
+      - 'Monitoring/**'
+      - '.github/workflows/comment-service-ci.yml
+      - '.github/workflows/comment-service-cd.yml
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore ./CommentService/CommentService.csproj
+          
+      - name: Build
+        run: dotnet build ./CommentService/CommentService.csproj -c Release --no-restore
