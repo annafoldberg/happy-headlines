@@ -18,6 +18,14 @@ x-article-database: &article-database
     test: ["CMD-SHELL", "pg_isready -U happy-headlines -d articles"]
 
 services:
+  featurehub:
+    image: featurehub/party-server:latest
+    restart: always
+    volumes:
+      - featurehub-h2-data:/db
+    ports:
+      - 9000:8085
+
   prometheus:
     image: prom/prometheus:latest
     ports:
@@ -65,6 +73,26 @@ services:
       ACCEPT_EULA: "Y"
       SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
 
+  subscriber-service:
+    image: subscriber-service:latest
+    ports:
+      - "8086:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      SubscriberDatabase__Host: subscriber-database
+      SubscriberDatabase__Name: subscribers
+      SubscriberDatabase__User: happy-headlines
+      SubscriberDatabase__Password: happy-headlines
+      RabbitMQ__Host: rabbitmq
+      RabbitMQ__Port: 5672
+      RabbitMQ__User: happy-headlines
+      RabbitMQ__Password: happy-headlines
+      FeatureHub__EdgeUrl: http://featurehub:8085
+      FeatureHub__SdkKey: ${FEATUREHUB_SDK_KEY}
+    depends_on:
+      subscriber-database:
+        condition: service_healthy
+
   publisher-service:
     image: publisher-service:latest
     ports:
@@ -87,6 +115,7 @@ services:
       Seq__SeqUrl: http://seq
       Aspire__AspireUrl: http://aspire-dashboard:18889
       ArticleClient__BaseUrl: http://article-service:8080
+      SubscriberClient__BaseUrl: http://subscriber-service:8080
       RabbitMQ__Host: rabbitmq
       RabbitMQ__Port: 5672
       RabbitMQ__User: happy-headlines
@@ -104,6 +133,9 @@ services:
       DraftDatabase__Name: drafts
       DraftDatabase__User: happy-headlines
       DraftDatabase__Password: happy-headlines
+    depends_on:
+      draft-database:
+        condition: service_healthy
 
   profanity-service:
     image: profanity-service:latest
@@ -115,6 +147,9 @@ services:
       ProfanityDatabase__Name: profanities
       ProfanityDatabase__User: happy-headlines
       ProfanityDatabase__Password: happy-headlines
+    depends_on:
+      profanity-database:
+        condition: service_healthy
 
   comment-service:
     image: comment-service:latest
@@ -131,6 +166,9 @@ services:
       CommentDatabase__Name: comments
       CommentDatabase__User: happy-headlines
       CommentDatabase__Password: happy-headlines
+    depends_on:
+      comment-database:
+        condition: service_healthy
 
   article-service:
     image: article-service:latest
@@ -159,6 +197,18 @@ services:
       ArticleDatabase__Password: happy-headlines
     deploy:
       replicas: 3
+
+  subscriber-database:
+    <<: *postgres-database
+    environment:
+      <<: *postgres-environment
+      POSTGRES_DB: subscribers
+    healthcheck:
+      <<: *postgres-healthcheck
+      test: ["CMD-SHELL", "pg_isready -U happy-headlines -d subscribers"]
+    volumes:
+      - subscriber-database-data:/var/lib/postgresql/data
+      - ./SubscriberDatabase/init:/docker-entrypoint-initdb.d:ro
 
   draft-database:
     <<: *postgres-database
@@ -245,8 +295,10 @@ services:
       - ./ArticleDatabase/init:/docker-entrypoint-initdb.d:ro
 
 volumes:
+  featurehub-h2-data:
   seq-data:
   rabbitmq-data:
+  subscriber-database-data:
   draft-database-data:
   profanity-database-data:
   comment-database-data:

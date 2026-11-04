@@ -32,12 +32,12 @@ public class CommentRepository : ICommentRepository
     public async Task UpdateAsync(Comment comment, CancellationToken ct)
     {
         _context.Comments.Update(comment);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(ct);
     }
 
     public async Task DeleteAsync(Comment comment, CancellationToken ct)
     {
         _context.Comments.Remove(comment);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(ct);
     }
 }

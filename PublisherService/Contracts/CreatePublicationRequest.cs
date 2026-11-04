@@ -14,5 +14,5 @@ public sealed class CreatePublicationRequest
     public string Content { get; set; } = string.Empty;
 
     [Required]
-    public Continent Continent { get; set; }
+    public Continent? Continent { get; set; }
 }

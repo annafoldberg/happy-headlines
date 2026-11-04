@@ -1,27 +1,25 @@
-# PublisherService CI workflow
+# SubscriberService CI workflow
 # - Builds on pull requests and pushes to main.
 
-name: PublisherService CI
+name: SubscriberService CI
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'PublisherService/**'
+      - 'SubscriberService/**'
       - 'Messaging/**'
-      - 'Monitoring/**'
-      - '.github/workflows/publisher-service-ci.yml'
-      - '.github/workflows/publisher-service-cd.yml'
+      - '.github/workflows/subscriber-service-ci.yml'
+      - '.github/workflows/subscriber-service-cd.yml'
   pull_request:
     branches:
       - main
     paths:
-      - 'PublisherService/**'
+      - 'SubscriberService/**'
       - 'Messaging/**'
-      - 'Monitoring/**'
-      - '.github/workflows/publisher-service-ci.yml'
-      - '.github/workflows/publisher-service-cd.yml'
+      - '.github/workflows/subscriber-service-ci.yml'
+      - '.github/workflows/subscriber-service-cd.yml'
 
 permissions:
   contents: read
@@ -39,7 +37,7 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restore
-        run: dotnet restore ./PublisherService/PublisherService.csproj
+        run: dotnet restore ./SubscriberService/SubscriberService.csproj
           
       - name: Build
-        run: dotnet build ./PublisherService/PublisherService.csproj -c Release --no-restore
+        run: dotnet build ./SubscriberService/SubscriberService.csproj -c Release --no-restore

@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<INewsletterService, NewsletterService.Services.NewsletterService>();
 builder.Services.AddClients(builder.Configuration);
 builder.Services.AddHostedService<ArticlePublishedWorker>();
+builder.Services.AddHostedService<SubscriberCreatedWorker>();
 builder.Services.AddMessaging(builder.Configuration);
 builder.Services.AddMonitoring(builder.Configuration, builder.Environment);
 

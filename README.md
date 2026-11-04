@@ -44,12 +44,19 @@ Each `ArticleService` instance can access all eight databases and routes databas
 Manages published articles and subscribes to publication events.
 
 ##### API Endpoints
-| Method | Endpoint | Parameters | Body | Description |
+| Method | Endpoint | Description | Request Body | Responses |
 |---|---|---|---|---|
-| `POST` | `/Articles/{continent}` | `continent` | `CreateArticleDto` | Create a published article in the specified continent database |
-| `GET` | `/Articles/{continent}/{id}` | `continent`, `id` | — | Retrieve a published article |
-| `PATCH` | `/Articles/{continent}/{id}` | `continent`, `id` | `UpdateArticleDto` | Update a published article |
-| `DELETE` | `/Articles/{continent}/{id}` | `continent`, `id` | — | Delete a published article |
+| `POST` | `/Articles/{continent}` | Create a published article in the specified continent database | `CreateArticleRequest` | 201, 400 |
+| `GET` | `/Articles/{continent}/{id}` | Retrieve a published article | — | 200, 400, 404 |
+| `GET` | `/Articles/{continent}` | Retrieve an article by publication date | — | 200, 400, 404 |
+| `PATCH` | `/Articles/{continent}/{id}` | Update a published article | `UpdateArticleRequest` | 204, 400, 404 |
+| `DELETE` | `/Articles/{continent}/{id}` | Delete a published article | — | 204, 400, 404 |
+
+##### Path Parameters
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `continent` | `Continent` | Yes | Continent identifying the article database |
+| `id` | GUID | Yes | Public article identifier |
 
 Valid `continent` values:
 - `Africa`
@@ -61,25 +68,76 @@ Valid `continent` values:
 - `SouthAmerica`
 - `Global`
 
-<br>
+##### Query Parameters
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `publicationDate` | DateOnly | Yes | Publication date in `YYYY-MM-DD` format |
 
-`CreateArticleDto` contains required fields:
+The `publicationDate` parameter is used by `GET /Articles/{continent}`.
+
+##### Request Bodies
+
+###### CreateArticleRequest
+Used by `POST /Articles/{continent}`.
+
+| Property | Type | Required | Description |
+|---|---|---|---|
+| `author` | string | Yes | Article author (max. 100 characters) |
+| `title` | string | Yes | Article title (max. 200 characters) |
+| `content` | string | Yes | Article content |
+
+Example:
 ```json
 {
-  "author": "string",
-  "title": "string",
-  "content": "string"
+  "author": "Jane Doe",
+  "title": "Example Article",
+  "content": "Example article content."
 }
 ```
 
-`UpdateArticleDto` contains optional fields:
+###### UpdateArticleRequest
+Used by `PATCH /Articles/{continent}/{id}`.
+
+| Property | Type | Required | Description |
+|---|---|---|---|
+| `author` | string | No | Updated article author (max. 100 characters) |
+| `title` | string | No | Updated article title (max. 200 characters) |
+| `content` | string | No | Updated article content |
+
+Example:
 ```json
 {
-  "author": "string",
-  "title": "string",
-  "content": "string"
+  "title": "Updated Article Title"
 }
 ```
+
+Provided fields cannot be empty or contain only whitespace. Omitted or `null` fields are not updated.
+
+##### HTTP Responses
+| Status | Description |
+|---|---|
+| 200 OK | Article retrieved successfully |
+| 201 Created | Article created successfully |
+| 204 No Content | Article updated or deleted successfully |
+| 400 Bad Request | Request validation or parameter binding failed |
+| 404 Not Found | Requested article does not exist |
+
+##### Response Bodies
+
+###### ArticleResponse
+Returned by:
+- `POST /Articles/{continent}`
+- `GET /Articles/{continent}/{id}`
+- `GET /Articles/{continent}`
+
+| Property | Type | Nullable | Description |
+|---|---|---|---|
+| `id` | GUID | No | Public article identifier |
+| `author` | string | No | Article author |
+| `title` | string | No | Article title |
+| `content` | string | No | Article content |
+| `publicationTimestampUtc` | DateTime | No | Article publication timestamp in UTC |
+| `lastUpdatedTimestampUtc` | DateTime | Yes | Timestamp of the last article update in UTC |
 
 ##### Internal Flows
 <picture>
@@ -111,7 +169,7 @@ Management, storage, and profanity filtering of comments.
 ##### Fault Isolation between Services
 Within this scope, fault isolation is supported by:
 - Each service owns its own database.
-- A circuit breaker limits the impact of ProfanityService failues on CommentService.
+- A circuit breaker limits the impact of ProfanityService failures on CommentService.
 - Operations that don't require profanity filtering can continue independently.
 
 However, the implementation does not fully satisfy strict swimlane principles, as successful comment creation and content updates depend on a response from ProfanityService.
@@ -120,23 +178,45 @@ However, the implementation does not fully satisfy strict swimlane principles, a
 Filters profanity from content.
 
 ##### API Endpoints
-| Method | Endpoint | Parameters | Body | Description |
+| Method | Endpoint | Description | Request Body | Responses |
 |---|---|---|---|---|
-| `POST` | `/Profanities/filter` | — | `FilterContentRequest` | Filter profanity from content |
+| `POST` | `/Profanities/filter` | Filter profanity from content | `FilterContentRequest` | 200, 400 |
 
-<br>
+##### Request Bodies
 
-`FilterContentRequest` contains a required field:
+###### FilterContentRequest
+Used by `POST /Profanities/filter`.
+
+| Property | Type | Required | Description |
+|---|---|---|---|
+| `content` | string | Yes | Content to filter for profanity |
+
+Example:
 ```json
 {
-  "content": "string"
+  "content": "Example content to filter."
 }
 ```
 
-`FilterContentResponse` contains an optional field:
+##### HTTP Responses
+| Status | Description |
+|---|---|
+| 200 OK | Content filtered successfully |
+| 400 Bad Request | Request validation failed |
+
+##### Response Bodies
+
+###### FilterContentResponse
+Returned by `POST /Profanities/filter`.
+
+| Property | Type | Nullable | Description |
+|---|---|---|---|
+| `content` | string | No | Content with profanity filtered |
+
+Example:
 ```json
 {
-  "content": "string"
+  "content": "Filtered content."
 }
 ```
 
@@ -160,30 +240,83 @@ Contains `profanities` table.
 Manages comments.
 
 ##### API Endpoints
-| Method | Endpoint | Parameters | Body | Description |
+| Method | Endpoint | Description | Request Body | Responses |
 |---|---|---|---|---|
-| `POST` | `/Comments/{articleId}` | `articleId` | `CreateCommentRequest` | Create a comment for an article |
-| `GET` | `/Comments/article/{articleId}` | `articleId` | — | Retrieve all comments for an article |
-| `GET` | `/Comments/{id}` | `id` | — | Retrieve a comment |
-| `PATCH` | `/Comments/{id}` | `id` | `UpdateCommentRequest` | Update a comment |
-| `DELETE` | `/Comments/{id}` | `id` | — | Delete a comment |
+| `POST` | `/Comments/{articleId}` | Create a comment for an article | `CreateCommentRequest` | 201, 400 |
+| `GET` | `/Comments/article/{articleId}` | Retrieve all comments for an article | — | 200, 400 |
+| `GET` | `/Comments/{id}` | Retrieve a comment by ID | — | 200, 400, 404 |
+| `PATCH` | `/Comments/{id}` | Update a comment | `UpdateCommentRequest` | 204, 400, 404 |
+| `DELETE` | `/Comments/{id}` | Delete a comment | — | 204, 400, 404 |
 
-<br>
+##### Path Parameters
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `articleId` | GUID | Yes | Public identifier of the article |
+| `id` | GUID | Yes | Public identifier of the comment |
 
-`CreateCommentRequest` contains required fields:
+All path parameters are required.
+
+##### Request Bodies
+
+###### CreateCommentRequest
+Used by `POST /Comments/{articleId}`.
+
+| Property | Type | Required | Description |
+|---|---|---|---|
+| `author` | string | Yes | Comment author (max. 100 characters) |
+| `content` | string | Yes | Comment content (max. 2000 characters) |
+
+Example:
 ```json
 {
-  "author": "string",
-  "content": "string"
+  "author": "Jane Doe",
+  "content": "Example comment content."
 }
 ```
 
-`UpdateCommentRequest` contains optional fields:
+###### UpdateCommentRequest
+Used by `PATCH /Comments/{id}`.
+
+| Property | Type | Required | Description |
+|---|---|---|---|
+| `content` | string | No | Updated comment content (max. 2000 characters) |
+
+Example:
 ```json
 {
-  "content": "string"
+  "content": "Updated comment content."
 }
 ```
+
+The `content` field cannot be empty or contain only whitespace when provided with a non-null value.
+
+##### HTTP Responses
+| Status | Description |
+|---|---|
+| 200 OK | Comment or comments retrieved successfully |
+| 201 Created | Comment created successfully |
+| 204 No Content | Comment updated or deleted successfully |
+| 400 Bad Request | Request validation or parameter binding failed |
+| 404 Not Found | Requested comment does not exist |
+
+##### Response Bodies
+
+###### CommentResponse
+Returned by:
+- `POST /Comments/{articleId}`
+- `GET /Comments/article/{articleId}`
+- `GET /Comments/{id}`
+
+| Property | Type | Nullable | Description |
+|---|---|---|---|
+| `id` | GUID | No | Public comment identifier |
+| `articleId` | GUID | No | Public identifier of the associated article |
+| `author` | string | No | Comment author |
+| `content` | string | No | Comment content |
+| `creationTimestampUtc` | DateTime | No | Comment creation timestamp in UTC |
+| `lastUpdatedTimestampUtc` | DateTime | Yes | Timestamp of the last comment update in UTC |
+
+`GET /Comments/article/{articleId}` returns a collection of `CommentResponse` objects.
 
 ##### Internal Flow
 <picture>
@@ -192,11 +325,11 @@ Manages comments.
 </picture>
 
 ##### Circuit Breaker Pattern
-- Implemented with Polly to handle failues when communicating with ProfanityService.
+- Implemented with Polly to handle failures when communicating with ProfanityService.
 - Monitors requests over a 10-second period and opens when at least 3 requests have been made and 50% or more have failed
-- Prevents further requests to ProfanitySrevice for 30 seconds while the circuit is open.
+- Prevents further requests to ProfanityService for 30 seconds while the circuit is open.
 - Allows a test request after 30 seconds to determine whether ProfanityService has recovered.
-- If ProfanityService remains unavailable, comment creation and content updates fail, while comment retrieval, deletion, and author-only updates remain available.
+- If ProfanityService remains unavailable, comment creation and content updates fail, while comment retrieval and deletion remain available.
 
 ##### CommentDatabase
 Stores profanity-filtered comments. Contains `comments` table.
@@ -235,23 +368,66 @@ Focus on logging significant events and tracing application operations to suppor
 Manages drafts.
 
 ##### API Endpoints
-| Method | Endpoint | Parameters | Body | Description |
+| Method | Endpoint | Description | Request Body | Responses |
 |---|---|---|---|---|
-| `POST` | `/Drafts` | — | `DraftRequest` | Create a draft |
-| `GET` | `/Drafts/{id}` | `id` | — | Retrieve a draft |
-| `PUT` | `/Drafts/{id}` | `id` | `DraftRequest` | Update a draft |
-| `DELETE` | `/Drafts/{id}` | `id` | — | Delete a draft |
+| `POST` | `/Drafts` | Create a new draft | `DraftRequest` | 201, 400 |
+| `GET` | `/Drafts/{id}` | Retrieve a draft by ID | — | 200, 400, 404 |
+| `PUT` | `/Drafts/{id}` | Update a draft | `DraftRequest` | 204, 400, 404 |
+| `DELETE` | `/Drafts/{id}` | Delete a draft | — | 204, 400, 404 |
 
-<br>
+##### Path Parameters
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `id` | GUID | Yes | Public identifier of the draft |
 
-`DraftRequest` contains optional fields:
+##### Request Bodies
+
+###### DraftRequest
+Used by:
+- `POST /Drafts`
+- `PUT /Drafts/{id}`
+
+| Property | Type | Required | Description |
+|---|---|---|---|
+| `author` | string | No | Draft author (max. 100 characters) |
+| `title` | string | No | Draft title (max. 200 characters) |
+| `content` | string | No | Draft content |
+
+All properties are optional and nullable.
+
+Example:
 ```json
 {
-  "author": "string",
-  "title": "string",
-  "content": "string"
+  "author": "Jane Doe",
+  "title": "Example Draft",
+  "content": "Example draft content."
 }
 ```
+
+##### HTTP Responses
+| Status | Description |
+|---|---|
+| 200 OK | Draft retrieved successfully |
+| 201 Created | Draft created successfully |
+| 204 No Content | Draft updated or deleted successfully |
+| 400 Bad Request | Request validation or parameter binding failed |
+| 404 Not Found | Requested draft does not exist |
+
+##### Response Bodies
+
+###### DraftResponse
+Returned by:
+- `POST /Drafts`
+- `GET /Drafts/{id}`
+
+| Property | Type | Nullable | Description |
+|---|---|---|---|
+| `id` | GUID | No | Public draft identifier |
+| `author` | string | Yes | Draft author |
+| `title` | string | Yes | Draft title |
+| `content` | string | Yes | Draft content |
+| `creationTimestampUtc` | DateTime | No | Draft creation timestamp in UTC |
+| `lastUpdatedTimestampUtc` | DateTime | Yes | Timestamp of the last draft update in UTC |
 
 ##### Internal Flow
 <picture>
@@ -331,21 +507,21 @@ Publication, distribution, storage, and newsletter retrieval of published articl
 Publishes articles to queue.
 
 ##### API Endpoints
-| Method | Endpoint | Parameters | Body | Description |
+| Method | Endpoint | Description | Request Body | Responses |
 |---|---|---|---|---|
-| `POST` | `/Publications` | — | `CreatePublicationRequest` | Publish an article |
+| `POST` | `/Publications` | Publish an article through the messaging system | `CreatePublicationRequest` | 202, 400 |
 
-<br>
+##### Request Bodies
 
-`CreatePublicationRequest` contains required fields:
-```json
-{
-  "author": "string",
-  "title": "string",
-  "content": "string",
-  "continent": "string"
-}
-```
+###### CreatePublicationRequest
+Used by `POST /Publications`.
+
+| Property | Type | Required | Description |
+|---|---|---|---|
+| `author` | string | Yes | Article author |
+| `title` | string | Yes | Article title |
+| `content` | string | Yes | Article content |
+| `continent` | `Continent` | Yes | Continent in which the article should be published |
 
 Valid `continent` values:
 - `Africa`
@@ -356,6 +532,24 @@ Valid `continent` values:
 - `Oceania`
 - `SouthAmerica`
 - `Global`
+
+Example:
+```json
+{
+  "author": "Jane Doe",
+  "title": "Example Article",
+  "content": "Example article content.",
+  "continent": "Europe"
+}
+```
+
+##### HTTP Responses
+| Status | Description |
+|---|---|
+| 202 Accepted | Publication request accepted for processing |
+| 400 Bad Request | Request validation failed |
+
+The `202 Accepted` response indicates that the publication request was accepted, but does not guarantee that the article has been persisted by ArticleService.
 
 ##### Internal Flow
 <picture>
@@ -364,12 +558,17 @@ Valid `continent` values:
 </picture>
 
 #### NewsletterService
-Subscribes to published articles and retrieves article for daily newsletter.
+Subscribes to published article events and retrieves articles for daily newsletters.
 
 ##### API Endpoints
-| Method | Endpoint | Parameters | Body | Description |
+| Method | Endpoint | Description | Request Body | Responses |
 |---|---|---|---|---|
-| `GET` | `/Newsletters/{continent}/daily` | `continent`, `date` | — | Retrieve the daily newsletter for the specified continent and date |
+| `GET` | `/Newsletters/{continent}/daily` | Retrieve the daily newsletter for a continent and date | — | 200, 204, 400 |
+
+##### Path Parameters
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `continent` | `Continent` | Yes | Continent for which to retrieve the newsletter |
 
 Valid `continent` values:
 - `Africa`
@@ -381,7 +580,57 @@ Valid `continent` values:
 - `SouthAmerica`
 - `Global`
 
-The `date` query parameter uses the format `YYYY-MM-DD`.
+##### Query Parameters
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `date` | DateOnly | Yes | Newsletter date in `YYYY-MM-DD` format |
+
+Example:
+```http
+GET /Newsletters/Europe/daily?date=2026-11-04
+```
+
+##### HTTP Responses
+| Status | Description |
+|---|---|
+| 200 OK | Daily newsletter retrieved successfully |
+| 204 No Content | No newsletter exists for the specified continent and date |
+| 400 Bad Request | Parameter binding failed |
+
+##### Response Bodies
+
+###### NewsletterResponse
+Returned by `GET /Newsletters/{continent}/daily` when a newsletter exists.
+
+| Property | Type | Nullable | Description |
+|---|---|---|---|
+| `date` | DateOnly | No | Newsletter date |
+| `article` | `ArticleResponse` | No | Article included in the newsletter |
+
+###### ArticleResponse
+Nested within `NewsletterResponse`.
+
+| Property | Type | Nullable | Description |
+|---|---|---|---|
+| `id` | GUID | No | Public article identifier |
+| `author` | string | No | Article author |
+| `title` | string | No | Article title |
+| `content` | string | No | Article content |
+| `publicationTimestampUtc` | DateTime | No | Article publication timestamp in UTC |
+
+Example:
+```json
+{
+  "date": "2026-11-04",
+  "article": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "author": "Jane Doe",
+    "title": "Example Article",
+    "content": "Example article content.",
+    "publicationTimestampUtc": "2026-11-04T10:30:00Z"
+  }
+}
+```
 
 ##### Internal Flows
 <picture>
@@ -499,6 +748,160 @@ Cache-on-miss approach. The cache stores comments for up to 30 recently accessed
   <img alt="Comment cache invalidation" src="./docs/figures/comment-cache-invalidation-low-level-light.png" width="700">
 </picture>
 
+### Subscription Management
+Management and storage of newsletter subscribers, including asynchronous notification of new subscriptions.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/figures/subscription-management-container-view-dark.png">
+  <img alt="Container view" src="./docs/figures/subscription-management-container-view-light.png" width="180">
+</picture>
+
+##### Fault Isolation and Release Toggle
+SubscriberService operates independently of NewsletterService and maintains its own database. Communication between the services uses HTTP for subscriber retrieval and RabbitMQ for asynchronous notification of new subscriptions.
+
+FeatureHub controls SubscriberService availability through a release toggle. Disabling SubscriberService does not require restarting or redeploying the system. NewsletterService handles failed subscriber retrieval requests without affecting unrelated operations.
+
+#### SubscriberService
+Manages newsletter subscriptions and publishes events when new subscribers are created.
+
+##### API Endpoints
+| Method | Endpoint | Description | Request Body | Responses |
+|---|---|---|---|---|
+| `POST` | `/Subscribers` | Create a new subscriber | `CreateSubscriberRequest` | 201, 400, 409, 500 |
+| `GET` | `/Subscribers` | Retrieve all subscribers | — | 200 |
+| `DELETE` | `/Subscribers/{id}` | Delete a subscriber by public ID | — | 204, 400, 404 |
+
+##### Path Parameters
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `id` | GUID | Yes | Public identifier of the subscriber |
+
+##### Request Bodies
+
+###### CreateSubscriberRequest
+Used by `POST /Subscribers`.
+
+| Property | Type | Required | Description |
+|---|---|---|---|
+| `email` | string | Yes | Subscriber email address (max. 255 characters) |
+
+Example:
+```json
+{
+  "email": "jane@example.com"
+}
+```
+
+##### HTTP Responses
+| Status | Description |
+|---|---|
+| 200 OK | Subscribers retrieved successfully |
+| 201 Created | Subscriber created successfully |
+| 204 No Content | Subscriber deleted successfully |
+| 400 Bad Request | Request validation or parameter binding failed |
+| 404 Not Found | Requested subscriber does not exist |
+| 409 Conflict | A subscriber with the specified email already exists |
+| 500 Internal Server Error | An unexpected result occurred during subscriber creation |
+
+##### Response Bodies
+
+###### SubscriberResponse
+Returned by:
+- `POST /Subscribers`
+- `GET /Subscribers`
+
+| Property | Type | Nullable | Description |
+|---|---|---|---|
+| `id` | GUID | No | Public subscriber identifier |
+| `email` | string | No | Subscriber email address |
+| `subscriptionTimestampUtc` | DateTime | No | Subscription creation timestamp in UTC |
+
+`GET /Subscribers` returns a collection of `SubscriberResponse` objects.
+
+Example:
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "email": "jane@example.com",
+  "subscriptionTimestampUtc": "2026-11-04T10:30:00Z"
+}
+```
+
+A `409 Conflict` response contains the message:
+```text
+A subscriber with this email already exists.
+```
+
+#### SubscriberDatabase
+Stores subscribers. Contains `subscribers` table.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/figures/subscriber-database-dark.png">
+  <img alt="Subscribers table" src="./docs/figures/subscriber-database-light.png" width="300" >
+</picture>
+
+#### SubscriberQueue
+Handles asynchronous communication between SubscriberService and NewsletterService using RabbitMQ.
+
+SubscriberService publishes `SubscriberCreated` events to the `subscriber.created` fanout exchange, which distributes the events to NewsletterService's queue for processing welcome emails.
+
+| Exchange | Type | Consumer | Queue |
+|---|---|---|---|
+| `subscriber.created` | Fanout | NewsletterService | `newsletter.subscriber-created` |
+
+The `SubscriberCreated` event contains:
+
+```json
+{
+  "email": "string"
+}
+```
+
+#### NewsletterService
+Extended to retrieve subscribers from SubscriberService through HTTP and consume `SubscriberCreated` events through RabbitMQ.
+
+##### API Endpoints
+| Method | Endpoint | Description | Request Body | Responses |
+|---|---|---|---|---|
+| `GET` | `/Newsletters/subscribers` | Retrieve subscribers from SubscriberService | — | 200, 503 |
+
+##### HTTP Responses
+| Status | Description |
+|---|---|
+| 200 OK | Subscribers retrieved successfully |
+| 503 Service Unavailable | SubscriberService is unavailable |
+
+##### Response Bodies
+
+###### SubscriberResponse
+Returned by `GET /Newsletters/subscribers`.
+
+| Property | Type | Nullable | Description |
+|---|---|---|---|
+| `email` | string | No | Subscriber email address |
+
+The endpoint returns a collection of `SubscriberResponse` objects.
+
+Example:
+```json
+[
+  {
+    "email": "jane@example.com"
+  },
+  {
+    "email": "john@example.com"
+  }
+]
+```
+
+A `503 Service Unavailable` response contains the message:
+```text
+SubscriberService is unavailable.
+```
+
+##### Welcome Emails
+NewsletterService consumes `SubscriberCreated` events and simulates sending welcome emails through logging.
+
 ## CI/CD Pipeline
 The CI/CD pipelines follow the same workflow to automatically build and publish versioned Docker images to GitHub Container Registry.
 
@@ -515,9 +918,17 @@ CI/CD pipelines exist for:
 - NewsletterService
 - ProfanityService
 - PublisherService
+- SubscriberService
 
 ## Running the System with Docker Swarm
 > Run the following commands from the project root
+
+### Configuration
+> Configure the SubscriberServiceEnabled release toggle in FeatureHub and use its SDK key to connect SubscriberService.
+
+```bash
+export FEATUREHUB_SDK_KEY="<featurehub-sdk-key>"
+```
 
 ### Build Service Images
 ```bash
@@ -527,6 +938,7 @@ docker build -t draft-service:latest -f DraftService/Dockerfile .
 docker build -t newsletter-service:latest -f NewsletterService/Dockerfile .
 docker build -t profanity-service:latest -f ProfanityService/Dockerfile .
 docker build -t publisher-service:latest -f PublisherService/Dockerfile .
+docker build -t subscriber-service:latest -f SubscriberService/Dockerfile .
 ```
 
 ### Initialize Docker Swarm
@@ -570,7 +982,16 @@ docker exec -it <container-id> psql -U happy-headlines -d <database> -c "\dt"
 docker exec -it <container-id> psql -U happy-headlines -d <database> -c "SELECT * FROM <table>;"
 ```
 
-### Access Aspire Dashboard
+### Access Infrastructure Dashboards
+| Dashboard | Address |
+|---|---|
+| FeatureHub | `http://localhost:9000` |
+| Seq | `http://localhost:80` |
+| RabbitMQ Management | `http://localhost:15672` |
+| Prometheus | `http://localhost:9090` |
+| Grafana | `http://localhost:3000` |
+
+#### Access Aspire Dashboard
 ```bash
 docker service logs happy-headlines_aspire-dashboard 2>&1 | grep 'login?t='
 ```
@@ -581,11 +1002,13 @@ docker service logs happy-headlines_aspire-dashboard 2>&1 | grep 'login?t='
 docker stack rm happy-headlines
 ```
 
-### Delete Database Volumes
+### Delete Persistent Volumes
 ```bash
 docker volume rm \
+  happy-headlines_featurehub-h2-data \
   happy-headlines_seq-data \
   happy-headlines_rabbitmq-data \
+  happy-headlines_subscriber-database-data \
   happy-headlines_draft-database-data \
   happy-headlines_profanity-database-data \
   happy-headlines_comment-database-data \

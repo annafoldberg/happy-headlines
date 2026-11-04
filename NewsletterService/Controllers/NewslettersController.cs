@@ -5,7 +5,7 @@ using NewsletterService.Services;
 namespace NewsletterService.Controllers;
 
 [ApiController]
-[Route("[controller]/{continent}")]
+[Route("[controller]")]
 public class NewslettersController : ControllerBase
 {
     private readonly INewsletterService _service;
@@ -15,7 +15,7 @@ public class NewslettersController : ControllerBase
         _service = service;
     }
 
-    [HttpGet("daily")]
+    [HttpGet("{continent}/daily")]
     public async Task<IActionResult> GetDailyNewsletter([FromRoute] Continent continent,
         [FromQuery] DateOnly date, CancellationToken ct)
     {
@@ -24,5 +24,20 @@ public class NewslettersController : ControllerBase
         if (newsletter is null) return NoContent();
 
         return Ok(newsletter);
+    }
+
+    [HttpGet("subscribers")]
+
+    public async Task<IActionResult> GetSubscribers(CancellationToken ct)
+    {
+        try
+        {
+            var subscribers = await _service.GetSubscribersAsync(ct);
+            return Ok(subscribers);
+        }
+        catch (HttpRequestException)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, "SubscriberService is unavailable.");
+        }
     }
 }

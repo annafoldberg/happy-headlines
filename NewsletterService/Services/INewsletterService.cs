@@ -5,4 +5,5 @@ namespace NewsletterService.Services;
 public interface INewsletterService
 {
     Task<NewsletterResponse?> GetDailyNewsletterAsync(Continent continent, DateOnly date, CancellationToken ct);
+    Task<IReadOnlyList<SubscriberResponse>> GetSubscribersAsync(CancellationToken ct);
 }

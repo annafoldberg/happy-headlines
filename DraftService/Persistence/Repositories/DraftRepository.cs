@@ -27,12 +27,12 @@ public class DraftRepository : IDraftRepository
     public async Task UpdateAsync(Draft draft, CancellationToken ct)
     {
         _context.Drafts.Update(draft);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(ct);
     }
 
     public async Task DeleteAsync(Draft draft, CancellationToken ct)
     {
         _context.Drafts.Remove(draft);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(ct);
     }
 }
