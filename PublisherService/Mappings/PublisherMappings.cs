@@ -15,7 +15,7 @@ public static class PublisherMappings
             Title: request.Title,
             Content: request.Content,
             PublicationTimestampUtc: DateTime.UtcNow,
-            Continent: request.Continent.ToMessageContinent()
+            Continent: (request.Continent ?? PublisherContinent.Global).ToMessageContinent()
         );
     }
 
